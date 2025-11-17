@@ -21,5 +21,43 @@
       <button type="submit">התחבר</button>
     </form>
   </div>
+
+  <script>
+    const form = document.querySelector('form');
+    
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault(); // 1. עוצר את רענון הדף
+      
+      // 2. אוסף את המידע מהשדות
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      try {
+        // 3. שולח את המידע לשרת הפייתון
+        const response = await fetch('http://127.0.0.1:5000/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email: email, password: password }),
+        });
+        
+        const data = await response.json();
+        
+        // 4. מציג את התשובה למשתמש
+        if (response.ok) {
+          alert("Success" + data.message);
+          // כאן אפשר להוסיף קוד שמעביר לעמוד הבא
+        } else {
+          alert("Error: " + data.message);
+        }
+        
+      } catch (error) {
+        console.error('Error:', error);
+        alert("Network Error While Trying To Connect To The Server.");
+      }
+    });
+  </script>
+
 </body>
 </html>
