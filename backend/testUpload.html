@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>בדיקת העלאת קבצים</title>
+</head>
+<body>
+    <h2>בדיקת העלאת מסמך רפואי 📁</h2>
+    
+    <form action="http://127.0.0.1:5000/api/upload_document" method="POST" enctype="multipart/form-data">
+        
+        <label>מספר חיה (pet_id):</label><br>
+        <input type="number" name="pet_id" value="1" required><br><br>
+
+        <label>בחר קובץ:</label><br>
+        <input type="file" name="file" required><br><br>
+
+        <button type="submit">העלה מסמך</button>
+    </form>
+</body>
+</html>

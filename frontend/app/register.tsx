@@ -104,7 +104,7 @@ export default function RegisterScreen() {
 
         {/* Back To Login Button */}
         <TouchableOpacity style={styles.linkButton} onPress={() => router.back()}>
-          <Text style={styles.linkText}>Already have an account? Login</Text>
+          <Text style={styles.linkText}>Already have an account? Log in</Text>
         </TouchableOpacity>
 
       </View>
