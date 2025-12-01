@@ -6,7 +6,7 @@ export default function LoginScreen() {
   // 1. משתנים לשמירת המידע (במקום getElementById)
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('')
-  const router = useRouter();
+  const router = useRouter(); //Using it to navigate between pages
 
   // 2. הפונקציה שמתבצעת בלחיצה על "התחבר"
   const handleLogin = async () => {
@@ -15,7 +15,7 @@ export default function LoginScreen() {
       // לדוגמה: 'http://192.168.1.15:5000/api/login'
       // אם את בודקת בדפדפן במחשב, 127.0.0.1 זה בסדר.
       //http://127.0.0.1:5000/api/login
-      const response = await fetch('http://192.168.192.223:5000/api/login' , {
+      const response = await fetch('http://10.202.59.223:5000/api/login' , {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
