@@ -1,8 +1,11 @@
-name: Build React
+name: Build React App
 
 on:
   push:
     branches: [ "main" ]
+
+permissions:
+  contents: write  # <-- מאפשר ל-Actions לעשות git push
 
 jobs:
   build:
@@ -11,26 +14,28 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0     # <-- חשוב בשביל git push
 
-    - name: Install Node
+    - name: Setup Node
       uses: actions/setup-node@v3
       with:
-        node-version: '18'
+        node-version: "18"
 
     - name: Install dependencies
       run: |
         cd frontend
         npm install
 
-    - name: Build React app
+    - name: Build React project
       run: |
         cd frontend
         npm run build
 
-    - name: Commit build folder
+    - name: Commit build files
       run: |
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
         git add frontend/build -f
-        git commit -m "Auto-build React app" || echo "No changes to commit"
+        git commit -m "Auto-build React production files" || echo "No changes"
         git push
