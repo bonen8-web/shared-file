@@ -1,11 +1,14 @@
 import os
 from flask import Flask, jsonify, request
+from sqlalchemy import orm
 from flask_sqlalchemy import SQLAlchemy #עוזר להתחבר מול SQL בצורה נוחה ופשוטה יותר
 from flask_bcrypt import Bcrypt #מצפין את הסיסמה של היוזר
 from flask_cors import CORS #חיבור לפרונט של ריאקט
-from datetime import datetime # משמש לתאריך יום הולדת של חיית המחמד
+from datetime import datetime, timedelta, timezone # משמש לתאריך יום הולדת של חיית המחמד
 from werkzeug.utils import secure_filename #נשתמש כדי לנקות שמות של קבצים בשביל אבטחה
 import time #נשתמש כדי להוסיף TIMESTAMP על קובץ מסמך ששמרנו
+import string #נשתמש כדי ליצור את הקוד החד פעמי לחיבור יוזר לחיה קיימת
+import random #נשתמש כדי ליצור את הקוד החד פעמי לחיבור יוזר לחיה קיימת
 
 app = Flask(__name__)
 CORS(app) #מאפשר לדפדפן לפנות לשרת שלי
@@ -28,6 +31,15 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 
+########## PetOwners:
+# Join between Users & Pets --> רבים לרבים
+
+pet_owners = db.Table('PetOwners',
+    db.Column('user_id', db.Integer, db.ForeignKey('Users.user_id'), primary_key=True),
+    db.Column('pet_id', db.Integer, db.ForeignKey('Pets.pet_id'), primary_key=True)
+)
+
+
 ########## Users:
 class User(db.Model):
     __tablename__ = 'Users' 
@@ -39,8 +51,9 @@ class User(db.Model):
     last_name = db.Column(db.String(50), nullable=True)
     created_at = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp())
     
-    pets = db.relationship('Pet', backref='owner', lazy=True)
-    tasks = db.relationship('Task', backref='owner', lazy=True)
+    pets = db.relationship('Pet',secondary = pet_owners, backref = 'owners', lazy = 'dynamic')
+    tasks = db.relationship('Task', backref = 'creator', foreign_keys = '[Task.user_id]', lazy = True)
+    assigned_tasks = db.relationship('Task', backref = 'assignee', foreign_keys = '[Task.assigned_user_id]', lazy = 'dynamic')
 
 
 ########## Pets:
@@ -52,10 +65,7 @@ class Pet(db.Model):
     species = db.Column(db.String(50))
     breed = db.Column(db.String(50))
     birth_date = db.Column(db.Date)
-    gender = db.Column(db.Enum('Male', 'Female'), nullable=True)
-    
-    user_id = db.Column(db.Integer, db.ForeignKey('Users.user_id'), nullable=False)
-    
+    gender = db.Column(db.Enum('Male', 'Female'), nullable=True)    
     
     tasks = db.relationship('Task', backref='pet', lazy=True)
     documents = db.relationship('Document', backref='pet', lazy=True)
@@ -73,6 +83,7 @@ class Task(db.Model):
     created_at = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp())
     
     user_id = db.Column(db.Integer, db.ForeignKey('Users.user_id'), nullable = False)
+    assigned_user_id = db.Column(db.Integer, db.ForeignKey('Users.user_id'), nullable = True)
     pet_id = db.Column(db.Integer, db.ForeignKey('Pets.pet_id'), nullable = True)
 
 
@@ -115,6 +126,29 @@ class Document(db.Model):
     upload_date = db.Column(db.TIMESTAMP, server_default = db.func.current_timestamp())
     
     pet_id = db.Column(db.Integer, db.ForeignKey('Pets.pet_id'), nullable = False)
+
+
+########## ShareCodes:
+
+class ShareCode(db.Model):
+    __tablename__ = 'ShareCodes'
+    code_id = db.Column(db.Integer, primary_key = True)
+    share_code = db.Column(db.String(10), unique = True, nullable = False)
+
+    pet_id = db.Column(db.Integer, db.ForeignKey('Pets.pet_id'), nullable = False)
+    creator_user_id = db.Column(db.Integer, db.ForeignKey('Users.user_id'), nullable = False)
+    expires_at = db.Column(db.DateTime, nullable = False, default=datetime.utcnow)
+
+    pet = db.relationship('Pet', backref = 'share_codes')
+    creator = db.relationship('User', backref = 'generated_share_codes')
+
+    def to_dict(self):
+        return {
+            'code_id': self.code_id,
+            'share_code': self.share_code,
+            'pet_id': self.pet_id,
+            'expires_at': self.expires_at.isoformat()
+        }
 
 ######################################################################################################################
 
@@ -166,9 +200,36 @@ def login_user():
     user = User.query.filter_by(email=data['email']).first()
 
     if user and bcrypt.check_password_hash(user.password_hash, data['password']):
-        return jsonify({'status': 'success', 'message': f' Welcome!{user.first_name}!'}), 200
+        return jsonify({
+            'status': 'success', 
+            'message': f'Welcome {user.first_name}!',
+            'user_id': user.user_id,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email
+        }), 200
 
     return jsonify({'status': 'error', 'message': 'Error! Check your email or password'}), 401
+
+
+###############   Get User Info   ###############
+@app.route('/api/users/<int:user_id>', methods=['GET'])
+def get_user_info(user_id):
+    user = User.query.get(user_id)
+    
+    if not user:
+        return jsonify({'status': 'error', 'message': 'User not found'}), 404
+    
+    return jsonify({
+        'status': 'success',
+        'user': {
+            'id': user.user_id,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'created_at': str(user.created_at) if user.created_at else None
+        }
+    }), 200
 
 
 ###############   Create New Pet   ###############
@@ -199,18 +260,18 @@ def add_pet():
 
     #  Creating pet object
     new_pet = Pet(
-        user_id=data['user_id'],
-        name=data['name'],
-        species=data.get('species'),
-        breed=data.get('breed'),
-        gender=data.get('gender'),
+        name = data['name'],
+        species = data.get('species'),
+        breed = data.get('breed'),
+        gender = data.get('gender'),
         birth_date = birth_date_obj
     )
     
 
     # Add new pet to PETS table:
     try:
-        db.session.add(new_pet)
+        user.pets.append(new_pet)
+        db.session.add(user)
         db.session.commit()
         return jsonify({
             'status': 'success', 
@@ -242,32 +303,74 @@ def get_user_pets(user_id):
                             'species': pet.species, 
                             'breed': pet.breed, 
                             'gender': pet.gender, 
-                            'birth_date': str(pet.birth_date) if pet.birth_date else None})
+                            'birth_date': str(pet.birth_date) if pet.birth_date else None,
+                            'is_owner': True})
 
     return jsonify({'status': 'success', 'pets': pets_list}), 200  
 
+
+###############   Get Owners List By Pet_Id   ###############
+
+@app.route('/api/pets/<int:pet_id>/owners', methods=['GET'])
+def get_pet_owners(pet_id):
+    pet = db.session.get(Pet, pet_id)
+
+    
+    # Check if the pet exists:
+    if not pet:
+        return jsonify({'status': 'error', 'message': 'Pet not found'}), 404
+    
+    #Creates owners list:
+    owners_list = []
+    for owner in pet.owners:
+        owners_list.append({
+            'user_id': owner.user_id,
+            'first_name': owner.first_name,
+            'email': owner.email,
+        })
+
+    return jsonify({
+        'status': 'success',
+        'pet_id': pet_id,
+        'owners': owners_list
+    }), 200
 
 ###############   Create New Task   ###############
 
 @app.route('/api/tasks', methods=['POST'])
 def add_task():
     data = request.get_json()
-    
+
+    creator_id = data.get('user_id')
+    assigned_id = data.get('assigned_user_id')
+    pet_id = data.get('pet_id')
+
     #Check that the fields are not null
-    if not data.get('user_id') or not data.get('title'):
+    if not creator_id or not data.get('title'):
         return jsonify({'status': 'error', 'message': 'Missing user_id or task title'}), 400
     
     # Check if the user exists:
-    user = User.query.get(data['user_id'])
+    user = db.session.get(User, creator_id)
     if not user:
-        return jsonify({'status': 'error', 'message': 'User ID not found'}), 404
+        return jsonify({'status': 'error', 'message': 'Creator user ID not found'}), 404
 
-    # Check if the pet exists:
-    pet_id = data.get('pet_id')
+   
     if pet_id:
-        pet = Pet.query.get(pet_id)
+        pet = db.session.get(Pet, pet_id)
+        
+         # Check if the pet exists:
         if not pet:
             return jsonify({'status': 'error', 'message': 'Pet ID not found'}), 404
+        
+         # Check if the pet belongs to the creator user:
+        if pet not in user.pets:
+            return jsonify({'status': 'error', 'message': 'Creator is not an owner of this pet. Access denied.'}), 403
+        
+         # Check if the pet belongs to the assigned user: 
+        if assigned_id and assigned_id != creator_id:
+            assignee = db.session.get(User, assigned_id)
+            if not assignee or pet not in assignee.pets:
+                return jsonify({'status': 'error', 'message': 'Assigned user ID is not an owner of this pet.'}), 403
     
 
     # Converting date object from string to date format
@@ -282,8 +385,9 @@ def add_task():
 
     # Creating task object
     new_task = Task(
-        user_id = data['user_id'],
-        pet_id = data.get('pet_id'),
+        user_id = creator_id,
+        assigned_user_id = assigned_id if assigned_id else creator_id,  #In case we dont have assigned user - the owner of this task will be the creator.
+        pet_id = pet_id,
         title = data['title'],
         description = data.get('description'),
         is_completed = data.get('is_completed', False),
@@ -360,16 +464,28 @@ def get_user_tasks(user_id):
     # Check if the user exists:
     if not user:
         return jsonify({'status': 'error', 'message': 'User not found.'}), 404
-        
+    
+    
     # Creating tasks list:
+    tasks = Task.query.filter_by(assigned_user_id=user_id).all()
+
     tasks_list = []
-    for task in user.tasks:
-        tasks_list.append({'id': task.task_id,
-                           'pet_id': task.pet_id, 
-                            'title': task.title, 
-                            'description': task.description, 
-                            'is_completed': task.is_completed, 
-                            'due_date': str(task.due_date) if task.due_date else None})
+    for task in tasks:
+        # Get creator info
+        creator = User.query.get(task.user_id)
+        creator_name = creator.first_name if creator else 'Unknown'
+        
+        tasks_list.append({
+            'id': task.task_id,
+            'assigned_to_id': task.assigned_user_id,
+            'created_by_id': task.user_id,
+            'created_by_name': creator_name,
+            'pet_id': task.pet_id, 
+            'title': task.title,
+            'description': task.description, 
+            'is_completed': task.is_completed, 
+            'due_date': str(task.due_date) if task.due_date else None
+        })
 
     return jsonify({'status': 'success', 'tasks': tasks_list}), 200 
 
@@ -422,16 +538,16 @@ def upload_file():
     #If file exists ----> Add timestamp to file name
     if file:
         original_filename = secure_filename(file.filename)
-        uniqe_filename = f"{int(time.time())}_{original_filename}"
+        unique_filename = f"{int(time.time())}_{original_filename}"
 
         #Save file
-        full_path = os.path.join(app.config['UPLOAD_FOLDER'], uniqe_filename)
+        full_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
         file.save(full_path)
 
         #Save info in SQL DB - Documents table
         new_doc = Document(pet_id = pet_id,
                            document_name = original_filename,
-                           file_url = f"/static/uploads/{uniqe_filename}")
+                           file_url = f"/static/uploads/{unique_filename}")
         
 
         try:
@@ -452,7 +568,7 @@ def upload_file():
 @app.route('/api/pets/<int:pet_id>/documents', methods = ['GET'])
 def get_pet_documents(pet_id):
 
-    # Check if the pet exists:
+    #Check if the pet exists:
     pet = Pet.query.get(pet_id)
     
     if not pet:
@@ -474,6 +590,135 @@ def get_pet_documents(pet_id):
 
 
 
+###############   Generate Share Code   ###############
+
+### Generating Code:
+def generate_unique_code(length=6):
+   
+    characters = string.ascii_uppercase + string.digits
+
+    while True:
+        code = ''.join(random.choice(characters) for _ in range(length))
+
+        #Make sure this code dosent exsists
+        if not ShareCode.query.filter_by(share_code=code).first():
+            return code
+
+@app.route('/api/pets/generate_code', methods=['POST'])
+def generate_share_code():
+    data = request.get_json()
+    user_id = data.get('user_id')
+    pet_id = data.get('pet_id')
+    
+    #Check that the fields are not null:
+    if not user_id or not pet_id:
+        return jsonify({'status': 'error', 'message': 'Missing user_id or pet_id'}), 400
+
+    user = User.query.get(user_id)
+    pet = Pet.query.get(pet_id)
+
+    #Check if the user & pet exists:
+    if not user or not pet:
+        return jsonify({'status': 'error', 'message': 'User or Pet not found'}), 404
+    
+    #Checks that the user is the owner of this pet:
+    if pet not in user.pets:
+         return jsonify({'status': 'error', 'message': 'User is not an owner of this pet. Cannot share.'}), 403
+
+    #Generating the code
+    code = generate_unique_code(length=6)
+    
+    #Create expiry date:
+    expiry_time = datetime.utcnow() + timedelta(hours=48)
+    
+    #Save info in SQL DB - ShareCodes table
+    new_share_code = ShareCode(
+        pet_id=pet_id,
+        creator_user_id=user_id,
+        share_code=code,
+        expires_at=expiry_time
+    )
+
+    try:
+        db.session.add(new_share_code)
+        db.session.commit()
+        
+        return jsonify({
+            'status': 'success', 
+            'message': 'Share code generated successfully!',
+            'share_code': code,
+            'expires_at': expiry_time.isoformat()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+    
+
+###############   Join User To Be A Pet Owner Using Share Code   ###############
+
+@app.route('/api/pets/join_by_code', methods=['POST'])
+def join_pet_by_code():
+    data = request.get_json()
+    
+    user_id = data.get('user_id')
+    share_code = data.get('share_code')
+
+    
+    #Check that the fields are not null:
+    if not user_id or not share_code:
+        return jsonify({'status': 'error', 'message': 'User or Code not found'}), 400
+    
+    
+    #Check if the user & pet exists:
+    user_to_join = User.query.get(user_id)
+    if not user_to_join:
+        return jsonify({'status': 'error', 'message': 'Joining user not found'}), 404
+    
+    #Check that Share Code exsists in DB
+    share_record = ShareCode.query.filter_by(share_code = share_code).first()
+
+    if not share_record:
+        return jsonify({'status': 'error', 'message': 'Invalid share code'}), 404
+    
+    #Checks that the code is not expired - If it is = delete it.
+    if share_record.expires_at < datetime.utcnow():
+        db.session.delete(share_record)
+        db.session.commit()
+        return jsonify({'status': 'error', 'message': 'Share code has expired'}), 400
+    
+
+    pet_to_link = Pet.query.get(share_record.pet_id)
+
+    #Checks if the new user is already linked to this pet:
+    if pet_to_link in user_to_join.pets:
+
+        try:
+            db.session.delete(share_record)
+            db.session.commit()
+        except:
+             pass
+             
+        return jsonify({
+            'status': 'error', 
+            'message': f'You are already an owner of {pet_to_link.name}.'
+        }), 400
+    
+    try:
+        # Add new pet to PetOwners table and delete the share code we just used:
+        user_to_join.pets.append(pet_to_link)
+        db.session.delete(share_record)
+        db.session.add(user_to_join)
+        db.session.commit()
+        
+        return jsonify({
+            'status': 'success', 
+            'message': f'{user_to_join.first_name} is now a co-owner of {pet_to_link.name}!'
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 ############################################################################################################################
     # Run server:

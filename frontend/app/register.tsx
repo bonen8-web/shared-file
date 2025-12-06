@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ImageBackground, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import api from '../api/config';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+// תמונת רקע
+import RegisterBg from '../assets/images/Register.png';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -12,125 +17,125 @@ export default function RegisterScreen() {
 
 
   const handleRegister = async () => {
+    console.log('SIGN UP PRESSED');
     if (!firstName || !email || !password) {
       Alert.alert("Error", "Please fill in all required fields (First Name, Email, Password)");
       return;
     }
 
     try {
-      const response = await fetch('http://192.168.192.223:5000/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          first_name: firstName,
-          last_name: lastName,
-          email: email,
-          password: password
-        }),
+      const { data } = await api.post('/register', {
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        password: password
       });
 
-      const data = await response.json();
+      console.log('REGISTER response:', data);
 
-      if (response.ok) {
-        Alert.alert("Success", "Registration complete! Log in to get started", [
-          { text: "מעולה", onPress: () => router.replace('/') }
-        ]);
-      } else {
-        Alert.alert("Registration Error", data.message);
-      }
+      Alert.alert("Success", "Registration complete! Log in to get started", [
+        { text: "מעולה", onPress: () => router.replace('/') }
+      ]);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      Alert.alert("Connection Error", "Could not connect to the server");
+      const message = error.response?.data?.message || 'Could not connect to the server';
+      Alert.alert("Registration Error", message);
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.registerContainer}>
-        <Text style={styles.h2}>Sign Up</Text>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <ImageBackground
+        source={RegisterBg}
+        style={styles.background}
+        resizeMode="stretch"
+      >
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.registerContainer}>
+            <Text style={styles.h2}>Sign Up</Text>
 
-        {/* First_Name */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>* First Name</Text>
-          <TextInput
-            style={styles.input}
-            value={firstName}
-            onChangeText={setFirstName}
-          />
-        </View>
+            {/* First_Name */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>* First Name</Text>
+              <TextInput
+                style={styles.input}
+                value={firstName}
+                onChangeText={setFirstName}
+              />
+            </View>
 
-        {/* Last_Name */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Last Name</Text>
-          <TextInput
-            style={styles.input}
-            value={lastName}
-            onChangeText={setLastName}
-          />
-        </View>
+            {/* Last_Name */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Last Name</Text>
+              <TextInput
+                style={styles.input}
+                value={lastName}
+                onChangeText={setLastName}
+              />
+            </View>
 
-        
-        {/* Email */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>* Email</Text>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-        </View>
+            {/* Email */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>* Email</Text>
+              <TextInput
+                style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
 
-        
-        {/* Password */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>* Password</Text>
-          <TextInput
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-        </View>
+            {/* Password */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>* Password</Text>
+              <TextInput
+                style={styles.input}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
+            </View>
 
-         {/* Register Button */}
-        <TouchableOpacity style={styles.button} onPress={handleRegister}>
-          <Text style={styles.buttonText}>Sign Up</Text>
-        </TouchableOpacity>
+            {/* Register Button */}
+            <TouchableOpacity style={styles.button} onPress={handleRegister}>
+              <Text style={styles.buttonText}>Sign Up</Text>
+            </TouchableOpacity>
 
-        {/* Back To Login Button */}
-        <TouchableOpacity style={styles.linkButton} onPress={() => router.back()}>
-          <Text style={styles.linkText}>Already have an account? Log in</Text>
-        </TouchableOpacity>
+            {/* Back To Login Button */}
+            <TouchableOpacity style={styles.linkButton} onPress={() => router.back()}>
+              <Text style={styles.linkText}>Already have an account? Log in</Text>
+            </TouchableOpacity>
 
-      </View>
-    </ScrollView>
+          </View>
+        </ScrollView>
+      </ImageBackground>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#D9E5EF', // צבע תואם לתחתית התמונה
+  },
+  background: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f0f2f5',
     paddingVertical: 20,
   },
   registerContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',  // שקוף לגמרי
     padding: 32,
-    borderRadius: 16,
     width: '90%',
     maxWidth: 340,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
   },
   h2: {
     fontSize: 24,
@@ -152,16 +157,16 @@ const styles = StyleSheet.create({
     width: '100%',
     padding: 12,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: 'rgba(0, 0, 0, 0.3)',
     borderRadius: 8,
     fontSize: 14,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',  // שקוף לגמרי
     textAlign: 'left',
   },
   button: {
     width: '100%',
     padding: 14,
-    backgroundColor: '#28a745',
+    backgroundColor: '#156082',
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 10,
