@@ -3,6 +3,7 @@ import React from 'react';
 
 import Homepage from '../assets/images/Homepage.png';
 import UserIcon from '../assets/images/User icon.png';
+import Logo from '../assets/images/Logo.png';
 
 // מייבאים רכיבים מ-React Native לבניית ממשק
 import { 
@@ -42,8 +43,12 @@ export default function HomeScreen() {
           <Image source={UserIcon} style={styles.userIcon} resizeMode="contain" />
         </TouchableOpacity>
 
-        {/* כותרת HOME - במיקום קבוע */}
-        <Text style={styles.pageTitle}>Home</Text>
+        {/* לוגו האפליקציה - ממורכז מעל הכותרת */}
+        <View style={styles.logoContainer}>
+          <Image source={Logo} style={styles.logo} resizeMode="contain" />
+          {/* כותרת HOME */}
+          <Text style={styles.pageTitle}>Home</Text>
+        </View>
         
         <View style={styles.circleContainer}>
           <View style={styles.row}>
@@ -100,8 +105,24 @@ userIconButton: {
 },
 
 userIcon: {
-  width: 45,
-  height: 45,
+  width: 65,
+  height: 65,
+},
+
+// לוגו האפליקציה - ממורכז מעל הכותרת
+logoContainer: {
+  position: 'absolute',
+  top: 70,
+  left: 0,
+  right: 0,
+  alignItems: 'center',
+  zIndex: 5,
+},
+
+logo: {
+  width: 70,
+  height: 70,
+  marginBottom: -15,
 },
 
 // הקונטיינר של כל העיגולים
@@ -150,10 +171,6 @@ circleText: {
 },
 
 pageTitle: {
-  position: 'absolute',
-  top: 100,
-  left: 0,
-  right: 0,
   fontSize: 32,
   fontWeight: '600',
   color: '#333',

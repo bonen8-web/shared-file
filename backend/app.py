@@ -150,6 +150,30 @@ class ShareCode(db.Model):
             'expires_at': self.expires_at.isoformat()
         }
 
+
+########## MedicalInfo:
+# מידע רפואי לכל חיה - יחס 1:1 עם Pet
+
+class MedicalInfo(db.Model):
+    __tablename__ = 'MedicalInfo'
+    
+    medical_id = db.Column(db.Integer, primary_key=True)
+    pet_id = db.Column(db.Integer, db.ForeignKey('Pets.pet_id'), unique=True, nullable=False)
+    
+    weight = db.Column(db.DECIMAL(5, 2), nullable=True)  # משקל בק"ג
+    allergies = db.Column(db.Text, nullable=True)  # אלרגיות
+    medications = db.Column(db.Text, nullable=True)  # תרופות נוכחיות
+    conditions = db.Column(db.Text, nullable=True)  # מצבים רפואיים
+    vet_name = db.Column(db.String(100), nullable=True)  # שם הווטרינר
+    vet_phone = db.Column(db.String(20), nullable=True)  # טלפון הווטרינר
+    last_checkup = db.Column(db.Date, nullable=True)  # בדיקה אחרונה
+    next_checkup = db.Column(db.Date, nullable=True)  # בדיקה הבאה
+    notes = db.Column(db.Text, nullable=True)  # הערות נוספות
+    updated_at = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+    
+    pet = db.relationship('Pet', backref=db.backref('medical_info', uselist=False))
+
+
 ######################################################################################################################
 
 ##############################    API's   ##############################
@@ -719,6 +743,126 @@ def join_pet_by_code():
     except Exception as e:
         db.session.rollback()
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+###############   Get Medical Info By Pet ID   ###############
+
+@app.route('/api/pets/<int:pet_id>/medical-info', methods=['GET'])
+def get_medical_info(pet_id):
+    # Check if the pet exists:
+    pet = Pet.query.get(pet_id)
+    if not pet:
+        return jsonify({'status': 'error', 'message': 'Pet not found'}), 404
+    
+    # Get medical info for this pet:
+    medical = MedicalInfo.query.filter_by(pet_id=pet_id).first()
+    
+    if not medical:
+        # Return empty medical info if none exists
+        return jsonify({
+            'status': 'success',
+            'medical_info': None,
+            'message': 'No medical info recorded yet'
+        }), 200
+    
+    return jsonify({
+        'status': 'success',
+        'medical_info': {
+            'pet_id': medical.pet_id,
+            'weight': float(medical.weight) if medical.weight else None,
+            'allergies': medical.allergies,
+            'medications': medical.medications,
+            'conditions': medical.conditions,
+            'vet_name': medical.vet_name,
+            'vet_phone': medical.vet_phone,
+            'last_checkup': str(medical.last_checkup) if medical.last_checkup else None,
+            'next_checkup': str(medical.next_checkup) if medical.next_checkup else None,
+            'notes': medical.notes,
+            'updated_at': str(medical.updated_at) if medical.updated_at else None
+        }
+    }), 200
+
+
+###############   Update Medical Info By Pet ID   ###############
+
+@app.route('/api/pets/<int:pet_id>/medical-info', methods=['PUT'])
+def update_medical_info(pet_id):
+    # Check if the pet exists:
+    pet = Pet.query.get(pet_id)
+    if not pet:
+        return jsonify({'status': 'error', 'message': 'Pet not found'}), 404
+    
+    data = request.get_json()
+    
+    # Get existing medical info or create new one:
+    medical = MedicalInfo.query.filter_by(pet_id=pet_id).first()
+    
+    if not medical:
+        medical = MedicalInfo(pet_id=pet_id)
+        db.session.add(medical)
+    
+    # Update fields if provided:
+    if 'weight' in data:
+        medical.weight = data['weight'] if data['weight'] else None
+    
+    if 'allergies' in data:
+        medical.allergies = data['allergies']
+    
+    if 'medications' in data:
+        medical.medications = data['medications']
+    
+    if 'conditions' in data:
+        medical.conditions = data['conditions']
+    
+    if 'vet_name' in data:
+        medical.vet_name = data['vet_name']
+    
+    if 'vet_phone' in data:
+        medical.vet_phone = data['vet_phone']
+    
+    if 'last_checkup' in data:
+        if data['last_checkup']:
+            try:
+                medical.last_checkup = datetime.strptime(data['last_checkup'], '%Y-%m-%d').date()
+            except ValueError:
+                return jsonify({'status': 'error', 'message': 'Invalid date format for last_checkup. Use YYYY-MM-DD'}), 400
+        else:
+            medical.last_checkup = None
+    
+    if 'next_checkup' in data:
+        if data['next_checkup']:
+            try:
+                medical.next_checkup = datetime.strptime(data['next_checkup'], '%Y-%m-%d').date()
+            except ValueError:
+                return jsonify({'status': 'error', 'message': 'Invalid date format for next_checkup. Use YYYY-MM-DD'}), 400
+        else:
+            medical.next_checkup = None
+    
+    if 'notes' in data:
+        medical.notes = data['notes']
+    
+    try:
+        db.session.commit()
+        return jsonify({
+            'status': 'success',
+            'message': 'Medical info updated successfully!',
+            'medical_info': {
+                'pet_id': medical.pet_id,
+                'weight': float(medical.weight) if medical.weight else None,
+                'allergies': medical.allergies,
+                'medications': medical.medications,
+                'conditions': medical.conditions,
+                'vet_name': medical.vet_name,
+                'vet_phone': medical.vet_phone,
+                'last_checkup': str(medical.last_checkup) if medical.last_checkup else None,
+                'next_checkup': str(medical.next_checkup) if medical.next_checkup else None,
+                'notes': medical.notes
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 
 ############################################################################################################################
     # Run server:

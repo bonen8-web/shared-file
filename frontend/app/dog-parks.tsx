@@ -10,6 +10,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import api from '../api/config';
 
 // ייבוא תמונת הרקע
@@ -25,6 +26,7 @@ interface DogPark {
 }
 
 export default function DogParksScreen() {
+  const router = useRouter();
   const [parks, setParks] = useState<DogPark[]>([]);
   const [filteredParks, setFilteredParks] = useState<DogPark[]>([]);
   const [cityFilter, setCityFilter] = useState('');
@@ -99,6 +101,11 @@ export default function DogParksScreen() {
         style={styles.background}
         resizeMode="stretch"
       >
+        {/* כפתור חזרה */}
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
+
         {/* כותרת העמוד */}
         <Text style={styles.pageTitle}>Dog Parks</Text>
         
@@ -221,6 +228,21 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 10,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  backButtonText: {
+    color: '#333',
+    fontSize: 14,
+    fontWeight: '500',
   },
   pageTitle: {
     fontSize: 32,
