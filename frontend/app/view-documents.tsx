@@ -127,7 +127,7 @@ export default function ViewDocumentsScreen() {
                 <View style={styles.documentInfo}>
                   <Text style={styles.documentName}>{doc.name}</Text>
                   <Text style={styles.documentDate}>
-                    📅 {formatDate(doc.upload_date)}
+                    {formatDate(doc.upload_date)}
                   </Text>
                 </View>
                 <View style={styles.downloadButton}>

@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
   button: {
     width: '100%',
     padding: 12,
-    backgroundColor: '#007bff',  // כחול
+    backgroundColor: '#156082',  // כחול
     borderRadius: 8,
     alignItems: 'center',        // ממרכז את הטקסט
     marginTop: 10,
