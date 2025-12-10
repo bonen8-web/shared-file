@@ -1,41 +1,39 @@
-name: Build React App
+name: Build Expo Web
 
 on:
   push:
     branches: [ "main" ]
 
 permissions:
-  contents: write  # <-- מאפשר ל-Actions לעשות git push
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0     # <-- חשוב בשביל git push
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Setup Node
-      uses: actions/setup-node@v3
-      with:
-        node-version: "18"
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
 
-    - name: Install dependencies
-      run: |
-        cd frontend
-        npm install
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm install
 
-    - name: Build React project
-      run: |
-        cd frontend
-        npm run build
+      - name: Build Expo project for web
+        working-directory: frontend
+        run: npm run build
 
-    - name: Commit build files
-      run: |
-        git config user.name "GitHub Actions"
-        git config user.email "actions@github.com"
-        git add frontend/build -f
-        git commit -m "Auto-build React production files" || echo "No changes"
-        git push
+      - name: Commit dist folder
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add frontend/dist -f || true
+          git commit -m "Update web build" || echo "No changes to commit"
+          git push
