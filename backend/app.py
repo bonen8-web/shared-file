@@ -20,13 +20,28 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 ### Connection String:
-DB_USER = "root"
-DB_PASS = "Ss100200"
-DB_HOST = "127.0.0.1"
-DB_NAME = "MyPetTimeApp"
+# קורא את ה-DATABASE_URL ממשתני הסביבה (Render/Production)
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
-app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
+# אם יש DATABASE_URL (Production) - משתמש בו
+if DATABASE_URL:
+    # Render נותן postgres:// אבל SQLAlchemy צריך postgresql://
+    if DATABASE_URL.startswith('postgres://'):
+        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+else:
+    # Local development - MySQL מקומי
+    DB_USER = "root"
+    DB_PASS = "Ss100200"
+    DB_HOST = "localhost"
+    DB_NAME = "MyPetTimeApp"
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_recycle': 280,
+    'pool_pre_ping': True,
+}
 
 db = SQLAlchemy(app)
 
