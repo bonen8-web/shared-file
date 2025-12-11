@@ -20,23 +20,12 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 ### Connection String:
-# קורא את ה-DATABASE_URL ממשתני הסביבה (Render/Production)
-DATABASE_URL = os.environ.get('DATABASE_URL')
+DB_USER = "sql8811580"
+DB_PASS = "Zr5e2wnTiF"
+DB_HOST = "sql8.freesqldatabase.com"
+DB_NAME = "sql8811580"
 
-# אם יש DATABASE_URL (Production) - משתמש בו
-if DATABASE_URL:
-    # Render נותן postgres:// אבל SQLAlchemy צריך postgresql://
-    if DATABASE_URL.startswith('postgres://'):
-        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
-    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-else:
-    # Local development - MySQL מקומי
-    DB_USER = "root"
-    DB_PASS = "Ss100200"
-    DB_HOST = "localhost"
-    DB_NAME = "MyPetTimeApp"
-    app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
-
+app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_recycle': 280,
@@ -880,9 +869,18 @@ def update_medical_info(pet_id):
 
 
 ############################################################################################################################
+# יצירת טבלאות אוטומטית אם הן לא קיימות
+with app.app_context():
+    try:
+        db.create_all()
+        print("✅ Database tables created/verified successfully!")
+    except Exception as e:
+        print(f"⚠️ Error creating tables: {e}")
+
+############################################################################################################################
     # Run server:
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=True)
 
 ############################################################################################################################
