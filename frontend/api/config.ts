@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // כתובת השרת המרכזית - שנה כאן אם הכתובת משתנה
-const API_BASE_URL = 'http://192.162.2.148:5000/api';
-//const API_BASE_URL = 'https://pettime8.onrender.com/api';
+//const API_BASE_URL = 'http://192.162.2.148:5000/api';
+const API_BASE_URL = 'https://pettime8.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

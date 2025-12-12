@@ -5,7 +5,7 @@ node_modules/
 
 # Expo
 .expo/
-dist/
+# dist/ - נשאיר כדי להעלות ל-cPanel דרך Git
 web-build/
 expo-env.d.ts
 
