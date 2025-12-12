@@ -1,5 +1,17 @@
+# .cpanel.yml
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/orelbo2/public_html/myproject-pet/
-    - /bin/rsync -av --delete --exclude='.git' --exclude='.cpanel.yml' ./ $DEPLOYPATH
+    # 1. מעבר לתיקיית הפרונטאנד
+    - cd frontend
+    
+    # 2. התקנת תלויות (Node.js/npm חייבים להיות זמינים בשרת)
+    - /usr/local/bin/npm install 
+    
+    # 3. יצירת גרסת הפרודקשן (ה-Build)
+    - /usr/local/bin/npm run build
+    
+    # 4. העתקת הקבצים הסטטיים לתיקייה הציבורית
+    # עליך להעתיק את התוצאה (build/) לנתיב הציבורי של ה-cPanel.
+    # הנתיב הציבורי הוא לרוב public_html
+    - /bin/cp -R build/* /home/orelbo2/public_html/
