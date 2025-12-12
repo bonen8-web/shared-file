@@ -1,4 +1,49 @@
+# ----------------------------------------------------
+# קובץ .gitignore ראשי (שורש המאגר)
+# ----------------------------------------------------
+
+# --- I. Backend / Python / Django ---
 venv/
 __pycache__/
 *.pyc
 .env
+*.orig.*
+
+# --- II. Frontend / Node.js & General Dependencies ---
+# קבצים אלה לא צריכים להישלח לגיט (כבד, לא נייד)
+frontend/node_modules/
+node_modules/
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.metro-health-check*
+
+# --- III. Frontend / Build Artifacts & Configuration ---
+# קבצים אלה נוצרים אוטומטית ואינם נחוצים בגיט
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.env*.local
+*.tsbuildinfo
+app-example
+
+# --- IV. Native / Mobile (אם רלוונטי) ---
+# קבצים אלה הם נגזרות קומפילציה ולא קוד מקור
+.kotlin/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+/ios
+/android
+
+# --- V. macOS / System Files ---
+.DS_Store
+
+# ----------------------------------------------------
+# כלל קריטי ל-Deployment ב-cPanel (שיטת Build מקומי)
+# ----------------------------------------------------
+# אנו רוצים *לשלוח* את תיקיית build לגיט, לכן:
+# 1. השורה "frontend/build/" *לא* צריכה להופיע בקובץ זה.
