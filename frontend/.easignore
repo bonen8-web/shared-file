@@ -1,0 +1,10 @@
+# Ignore backend folder
+../backend/
+
+# Ignore dist folder (web build)
+dist/
+
+# Ignore unnecessary files
+*.md
+.git
+

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ImageBackground, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ImageBackground, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import api from '../api/config';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -33,9 +33,14 @@ export default function RegisterScreen() {
 
       console.log('REGISTER response:', data);
 
-      Alert.alert("Success", "Registration complete! Log in to get started", [
-        { text: "מעולה", onPress: () => router.replace('/') }
-      ]);
+      if (Platform.OS === 'web') {
+        alert('Registration complete! Log in to get started');
+        router.replace('/');
+      } else {
+        Alert.alert("Success", "Registration complete! Log in to get started", [
+          { text: "OK", onPress: () => router.replace('/') }
+        ]);
+      }
 
     } catch (error: any) {
       console.error(error);

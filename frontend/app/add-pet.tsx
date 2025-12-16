@@ -58,17 +58,16 @@ export default function AddPetScreen() {
         birth_date: birthDate || null,
       });
 
-      // הצגת קוד השיתוף למשתמש
-      const shareCode = data.share_code;
       if (Platform.OS === 'web') {
-        alert(`Pet added successfully!\n\nShare Code: ${shareCode}\n\nSave this code to share your pet with others!`);
+        alert('Pet added successfully!');
+        router.back();
       } else {
         Alert.alert(
-          'Pet Added Successfully! 🎉', 
-          `Your pet's share code is:\n\n${shareCode}\n\nShare this code with family members so they can also access your pet's profile.`,
+          'Pet Added Successfully!', 
+          'Your pet has been added to your profile.',
           [
             {
-              text: 'Copy & Continue',
+              text: 'OK',
               onPress: () => router.back(),
             }
           ]

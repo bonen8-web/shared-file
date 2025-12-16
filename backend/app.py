@@ -9,21 +9,26 @@ from werkzeug.utils import secure_filename #נשתמש כדי לנקות שמו�
 import time #נשתמש כדי להוסיף TIMESTAMP על קובץ מסמך ששמרנו
 import string #נשתמש כדי ליצור את הקוד החד פעמי לחיבור יוזר לחיה קיימת
 import random #נשתמש כדי ליצור את הקוד החד פעמי לחיבור יוזר לחיה קיימת
+import requests #נשתמש כדי להעלות קבצים ל-cPanel
 
 app = Flask(__name__)
 CORS(app) #מאפשר לדפדפן לפנות לשרת שלי
 bcrypt = Bcrypt(app)
 
-# Creates new folder to contains user documents
+# cPanel Upload Settings
+CPANEL_UPLOAD_URL = 'https://orelbo2.mtacloud.co.il/upload.php'
+CPANEL_UPLOAD_KEY = 'MyPetTime2024Secret'
+
+# Local backup folder (optional)
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 ### Connection String:
-DB_USER = "sql8811580"
-DB_PASS = "Zr5e2wnTiF"
-DB_HOST = "sql8.freesqldatabase.com"
-DB_NAME = "sql8811580"
+DB_USER = "orelbo2_mypettime"
+DB_PASS = "mypettimepass"
+DB_HOST = "orelbo2.mtacloud.co.il"
+DB_NAME = "orelbo2_pet"
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -563,29 +568,39 @@ def upload_file():
     if file.filename == '' or not pet_id:
         return jsonify({'status': 'error', 'message': 'No file or missing pet_id'}), 400
     
-    #If file exists ----> Add timestamp to file name
+    #If file exists ----> Upload to cPanel
     if file:
         original_filename = secure_filename(file.filename)
-        unique_filename = f"{int(time.time())}_{original_filename}"
-
-        #Save file
-        full_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-        file.save(full_path)
-
-        #Save info in SQL DB - Documents table
-        new_doc = Document(pet_id = pet_id,
-                           document_name = original_filename,
-                           file_url = f"/static/uploads/{unique_filename}")
         
-
         try:
-            db.session.add(new_doc)
-            db.session.commit()
-            return jsonify({'status': 'success',
-                            'message': 'File uploaded seccessfully.',
-                            'file_url': new_doc.file_url}), 201
+            # Upload file to cPanel
+            files = {'file': (original_filename, file.stream, file.content_type)}
+            data = {'key': CPANEL_UPLOAD_KEY}
+            
+            response = requests.post(CPANEL_UPLOAD_URL, files=files, data=data, timeout=30)
+            result = response.json()
+            
+            if result.get('status') == 'success':
+                file_url = result.get('file_url')
+                
+                # Save info in SQL DB - Documents table
+                new_doc = Document(pet_id = pet_id,
+                                   document_name = original_filename,
+                                   file_url = file_url)
+                
+                db.session.add(new_doc)
+                db.session.commit()
+                
+                return jsonify({'status': 'success',
+                                'message': 'File uploaded successfully.',
+                                'file_url': file_url}), 201
+            else:
+                return jsonify({'status': 'error', 'message': result.get('message', 'Upload to cPanel failed')}), 500
         
+        except requests.exceptions.RequestException as e:
+            return jsonify({'status': 'error', 'message': f'Connection error: {str(e)}'}), 500
         except Exception as e:
+            db.session.rollback()
             return jsonify({'status': 'error', 'message': str(e)}), 500
     
     return jsonify({'status': 'error', 'message': 'Something went wrong..'}), 500   
@@ -606,7 +621,11 @@ def get_pet_documents(pet_id):
     #Create list of documents
     docs_list = []
     for doc in pet.documents:
-        full_url = f"{request.host_url.rstrip('/')}{doc.file_url}"
+        # Check if URL is already full (from cPanel) or relative (old uploads)
+        if doc.file_url.startswith('http'):
+            full_url = doc.file_url
+        else:
+            full_url = f"{request.host_url.rstrip('/')}{doc.file_url}"
 
         docs_list.append({'id': doc.doc_id,
                           'name': doc.document_name,
@@ -873,9 +892,9 @@ def update_medical_info(pet_id):
 with app.app_context():
     try:
         db.create_all()
-        print("✅ Database tables created/verified successfully!")
+        print(" Database tables created/verified successfully!")
     except Exception as e:
-        print(f"⚠️ Error creating tables: {e}")
+        print(f" Error creating tables: {e}")
 
 ############################################################################################################################
     # Run server:

@@ -123,12 +123,6 @@ const styles = StyleSheet.create({
   puzzlePiece: {
     alignItems: 'center',
     justifyContent: 'flex-start',
-    // הצללה לכפתור
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 10,
   },
   // פאזל שמאלי - קצת יותר גדול ומעל הימני
   puzzleWrapperLeft: {
