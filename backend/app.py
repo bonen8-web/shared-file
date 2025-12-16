@@ -25,10 +25,10 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 ### Connection String:
-DB_USER = "orelbo2_mypettime"
-DB_PASS = "mypettimepass"
-DB_HOST = "orelbo2.mtacloud.co.il"
-DB_NAME = "orelbo2_pet"
+DB_USER = "sql8811580"
+DB_PASS = "Zr5e2wnTiF"
+DB_HOST = "sql8.freesqldatabase.com"
+DB_NAME = "sql8811580"
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
