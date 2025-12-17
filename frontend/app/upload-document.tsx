@@ -123,13 +123,20 @@ export default function UploadDocumentScreen() {
       // FormData שולח את הנתונים כ-multipart/form-data (לא JSON)
       const formData = new FormData();
       
-      // הוספת הקובץ ל-FormData
-      // השרת מצפה לשדה בשם 'file'
-      formData.append('file', {
-        uri: selectedFile.uri,       // נתיב הקובץ
-        name: selectedFile.name,     // שם הקובץ
-        type: selectedFile.mimeType || 'application/octet-stream',  // סוג הקובץ
-      } as any);
+      // הוספת הקובץ ל-FormData - שונה בין Web ל-Mobile
+      if (Platform.OS === 'web') {
+        // ב-Web: צריך להמיר את הקובץ ל-Blob
+        const response = await fetch(selectedFile.uri);
+        const blob = await response.blob();
+        formData.append('file', blob, selectedFile.name);
+      } else {
+        // ב-Mobile: משתמשים באובייקט עם uri
+        formData.append('file', {
+          uri: selectedFile.uri,
+          name: selectedFile.name,
+          type: selectedFile.mimeType || 'application/octet-stream',
+        } as any);
+      }
       
       // הוספת שאר הנתונים
       formData.append('pet_id', String(petId));
