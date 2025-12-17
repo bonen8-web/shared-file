@@ -142,10 +142,12 @@ export default function UploadDocumentScreen() {
       formData.append('pet_id', String(petId));
 
       // שליחת הבקשה עם headers מיוחדים להעלאת קבצים
+      // timeout גבוה יותר להעלאת קבצים גדולים
       const { data } = await api.post('/upload_document', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        timeout: 60000, // 60 שניות
       });
 
       // הצלחה - מציג הודעה וחוזר לעמוד הקודם
