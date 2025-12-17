@@ -82,6 +82,10 @@ export default function UploadDocumentScreen() {
     }
   };
 
+  // הגדרות cPanel להעלאה ישירה
+  const CPANEL_UPLOAD_URL = 'https://orelbo2.mtacloud.co.il/upload.php';
+  const CPANEL_UPLOAD_KEY = 'MyPetTime2024Secret';
+
   // ========== פונקציה לשליחת המסמך לשרת ==========
   const handleUpload = async () => {
     // ---------- ולידציה (בדיקות תקינות) ----------
@@ -117,37 +121,46 @@ export default function UploadDocumentScreen() {
       return;
     }
 
-    // ---------- שליחה לשרת ----------
+    // ---------- שלב 1: העלאה ישירה ל-cPanel ----------
     try {
-      // יצירת FormData - נדרש להעלאת קבצים
-      // FormData שולח את הנתונים כ-multipart/form-data (לא JSON)
-      const formData = new FormData();
+      // יצירת FormData להעלאה ל-cPanel
+      const cpanelFormData = new FormData();
       
       // הוספת הקובץ ל-FormData - שונה בין Web ל-Mobile
       if (Platform.OS === 'web') {
         // ב-Web: צריך להמיר את הקובץ ל-Blob
         const response = await fetch(selectedFile.uri);
         const blob = await response.blob();
-        formData.append('file', blob, selectedFile.name);
+        cpanelFormData.append('file', blob, selectedFile.name);
       } else {
         // ב-Mobile: משתמשים באובייקט עם uri
-        formData.append('file', {
+        cpanelFormData.append('file', {
           uri: selectedFile.uri,
           name: selectedFile.name,
           type: selectedFile.mimeType || 'application/octet-stream',
         } as any);
       }
       
-      // הוספת שאר הנתונים
-      formData.append('pet_id', String(petId));
+      // הוספת מפתח אבטחה
+      cpanelFormData.append('key', CPANEL_UPLOAD_KEY);
 
-      // שליחת הבקשה עם headers מיוחדים להעלאת קבצים
-      // timeout גבוה יותר להעלאת קבצים גדולים
-      const { data } = await api.post('/upload_document', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        timeout: 60000, // 60 שניות
+      // שליחה ישירה ל-cPanel
+      const cpanelResponse = await fetch(CPANEL_UPLOAD_URL, {
+        method: 'POST',
+        body: cpanelFormData,
+      });
+      
+      const cpanelData = await cpanelResponse.json();
+      
+      if (cpanelData.status !== 'success') {
+        throw new Error(cpanelData.message || 'Upload to cPanel failed');
+      }
+
+      // ---------- שלב 2: שמירת המידע ב-DB דרך Render ----------
+      const { data } = await api.post('/save_document', {
+        pet_id: petId,
+        document_name: selectedFile.name,
+        file_url: cpanelData.file_url,
       });
 
       // הצלחה - מציג הודעה וחוזר לעמוד הקודם

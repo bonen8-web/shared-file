@@ -12,7 +12,7 @@ import random #נשתמש כדי ליצור את הקוד החד פעמי לחי
 import requests #נשתמש כדי להעלות קבצים ל-cPanel
 
 app = Flask(__name__)
-CORS(app) #מאפשר לדפדפן לפנות לשרת שלי
+CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True) #מאפשר לדפדפן לפנות לשרת שלי
 bcrypt = Bcrypt(app)
 
 # cPanel Upload Settings
@@ -604,6 +604,35 @@ def upload_file():
             return jsonify({'status': 'error', 'message': str(e)}), 500
     
     return jsonify({'status': 'error', 'message': 'Something went wrong..'}), 500   
+
+
+###############   Save Document Info (after direct cPanel upload)   ###############
+
+@app.route('/api/save_document', methods = ['POST'])
+def save_document():
+    data = request.get_json()
+    
+    pet_id = data.get('pet_id')
+    document_name = data.get('document_name')
+    file_url = data.get('file_url')
+    
+    if not pet_id or not document_name or not file_url:
+        return jsonify({'status': 'error', 'message': 'Missing required fields'}), 400
+    
+    try:
+        new_doc = Document(pet_id=pet_id,
+                           document_name=document_name,
+                           file_url=file_url)
+        
+        db.session.add(new_doc)
+        db.session.commit()
+        
+        return jsonify({'status': 'success',
+                        'message': 'Document saved successfully.',
+                        'file_url': file_url}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 ###############   Get List Of Documents By Pet ID   ###############
