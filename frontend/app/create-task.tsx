@@ -241,18 +241,46 @@ export default function CreateTaskScreen() {
           {/* שדה תאריך ושעה */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Due Date & Time</Text>
-            <TouchableOpacity 
-              style={styles.dateButton}
-              onPress={openDatePicker}
-            >
-              <Text style={styles.dateButtonIcon}>📅</Text>
-              <Text style={[
-                styles.dateButtonText,
-                !dueDate && styles.dateButtonPlaceholder
-              ]}>
-                {formatDisplayDate(dueDate)}
-              </Text>
-            </TouchableOpacity>
+            
+            {/* Web - שימוש ב-input רגיל */}
+            {Platform.OS === 'web' ? (
+              <input
+                type="datetime-local"
+                value={dueDate ? dueDate.toISOString().slice(0, 16) : ''}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setDueDate(new Date(e.target.value));
+                  } else {
+                    setDueDate(null);
+                  }
+                }}
+                min={new Date().toISOString().slice(0, 16)}
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.35)',
+                  borderRadius: 15,
+                  padding: 15,
+                  fontSize: 16,
+                  color: '#333',
+                  border: '1px solid rgba(100, 100, 100, 0.3)',
+                  width: '100%',
+                  boxSizing: 'border-box' as any,
+                }}
+              />
+            ) : (
+              /* Mobile - כפתור שפותח DateTimePicker */
+              <TouchableOpacity 
+                style={styles.dateButton}
+                onPress={openDatePicker}
+              >
+                <Text style={styles.dateButtonIcon}>📅</Text>
+                <Text style={[
+                  styles.dateButtonText,
+                  !dueDate && styles.dateButtonPlaceholder
+                ]}>
+                  {formatDisplayDate(dueDate)}
+                </Text>
+              </TouchableOpacity>
+            )}
             
             {dueDate && (
               <TouchableOpacity 
