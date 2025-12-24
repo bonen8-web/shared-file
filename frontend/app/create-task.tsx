@@ -169,7 +169,7 @@ export default function CreateTaskScreen() {
     if (value) {
       try {
         
-        const { data } = await api.get('/auth/google');
+        const { data } = await api.get('/api/auth/google');
 
       if (data.auth_url) {
   const confirmed = window.confirm("Connect to Google Calendar?");
