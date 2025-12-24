@@ -202,7 +202,7 @@ class MedicalInfo(db.Model):
 
 GOOGLE_CLIENT_ID = "450073431200-8uajaa6esrf7c0pthfohavqcb25fqupn.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET = "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"
-REDIRECT_URI = "https://orelbo2.mtacloud.co.il/callback"
+REDIRECT_URI = "https://pettime8.onrender.com/callback"
 SCOPES = ['https://www.googleapis.com/auth/calendar.events']
 
 @app.route('/api/auth/google')
