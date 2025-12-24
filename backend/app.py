@@ -10,9 +10,19 @@ import time #נשתמש כדי להוסיף TIMESTAMP על קובץ מסמך ש�
 import string #נשתמש כדי ליצור את הקוד החד פעמי לחיבור יוזר לחיה קיימת
 import random #נשתמש כדי ליצור את הקוד החד פעמי לחיבור יוזר לחיה קיימת
 import requests #נשתמש כדי להעלות קבצים ל-cPanel
+import json
+from google_auth_oauthlib.flow import Flow #שימוש לצורך גוגל
+from googleapiclient.discovery import build #שימוש לצורך גוגל
+from google.oauth2.credentials import Credentials #שימוש לצורך גוגל
+
+import os
+
+#os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  #Wont be needed when we will have httpS
+
+stored_creds = None 
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True) #מאפשר לדפדפן לפנות לשרת שלי
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True) #מאפשר לדפדפן לפנות לשרת שלי
 bcrypt = Bcrypt(app)
 
 # cPanel Upload Settings
@@ -90,6 +100,7 @@ class Task(db.Model):
     due_date = db.Column(db.DateTime, nullable=True)
     is_completed = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp())
+    sync_to_calendar = db.Column(db.Boolean, default=False)
     
     user_id = db.Column(db.Integer, db.ForeignKey('Users.user_id'), nullable = False)
     assigned_user_id = db.Column(db.Integer, db.ForeignKey('Users.user_id'), nullable = True)
@@ -186,6 +197,57 @@ class MedicalInfo(db.Model):
 ######################################################################################################################
 
 ##############################    API's   ##############################
+
+###############   Google API   ###############
+
+GOOGLE_CLIENT_ID = "450073431200-8uajaa6esrf7c0pthfohavqcb25fqupn.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET = "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"
+REDIRECT_URI = "http://orelbo2.mtacloud.co.il/callback"
+SCOPES = ['https://www.googleapis.com/auth/calendar.events']
+
+@app.route('/api/auth/google')
+def authorize():
+    # Our Google Cloud keys
+    flow = Flow.from_client_config(
+        {"web": {
+            "client_id": GOOGLE_CLIENT_ID, 
+            "client_secret": GOOGLE_CLIENT_SECRET, 
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth", 
+            "token_uri": "https://oauth2.googleapis.com/token"
+        }},
+        scopes=SCOPES
+    )
+    flow.redirect_uri = REDIRECT_URI
+    
+    
+    authorization_url, state = flow.authorization_url(
+        access_type='offline',
+        include_granted_scopes='true'
+    )
+    
+    return jsonify({'auth_url': authorization_url})
+
+@app.route('/callback')
+def callback():
+    
+    flow = Flow.from_client_config(
+        {"web": {
+            "client_id": GOOGLE_CLIENT_ID, 
+            "client_secret": GOOGLE_CLIENT_SECRET, 
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth", 
+            "token_uri": "https://oauth2.googleapis.com/token"
+        }},
+        scopes=SCOPES
+    )
+    flow.redirect_uri = REDIRECT_URI
+    flow.fetch_token(authorization_response=request.url)
+    
+    global stored_creds
+    stored_creds = flow.credentials
+    
+    print("Google Credentials saved successfully!")
+    return "<h1>Success!</h1><p>Google Calendar connected. You can close this window and return to the app.</p>"
+
 
 ###############   Register New User   ###############
 @app.route('/api/register', methods=['POST'])
@@ -374,9 +436,12 @@ def get_pet_owners(pet_id):
 def add_task():
     data = request.get_json()
 
+    title = data.get('title')
     creator_id = data.get('user_id')
     assigned_id = data.get('assigned_user_id')
     pet_id = data.get('pet_id')
+    sync_to_calendar = data.get('sync_to_calendar', False)
+    raw_due_date = data.get('due_date')
 
     #Check that the fields are not null
     if not creator_id or not data.get('title'):
@@ -408,13 +473,19 @@ def add_task():
 
     # Converting date object from string to date format
     due_date_obj = None
-    if data.get('due_date'):
+    if raw_due_date:
         try:
-            due_date_obj = datetime.strptime(data['due_date'], '%Y-%m-%d').date()
+            if "T" in raw_due_date:
+                date_only = raw_due_date.split('T')[0]
+                due_date_obj = datetime.strptime(date_only, '%Y-%m-%d').date()
+            
+            else:
+                due_date_obj = datetime.strptime(raw_due_date, '%Y-%m-%d').date()
 
-        except ValueError:
-            return jsonify({'status': 'error', 'message': 'Invalid date format. Use YYYY-MM-DD'}), 400
-    
+        except ValueError as e:
+            print(f"Date Invalid {e}")
+            return jsonify({'status': 'error', 'message': 'Invalid date format'}), 400
+
 
     # Creating task object
     new_task = Task(
@@ -424,7 +495,8 @@ def add_task():
         title = data['title'],
         description = data.get('description'),
         is_completed = data.get('is_completed', False),
-        due_date = due_date_obj
+        due_date = due_date_obj,
+        sync_to_calendar = sync_to_calendar
     )
     
     
@@ -432,15 +504,57 @@ def add_task():
     try:
         db.session.add(new_task)
         db.session.commit()
+
+        if sync_to_calendar:
+            global stored_creds
+            if stored_creds:
+                try:
+                    service = build('calendar', 'v3', credentials = stored_creds)
+
+                    if "T" not in raw_due_date:
+                        start_time = f"{raw_due_date}T10:00:00Z"
+                        end_time = f"{raw_due_date}T11:00:00Z"
+                    
+                    else:
+                        clean_date = raw_due_date.replace('Z', '')
+                        start_dt = datetime.fromisoformat(clean_date)
+                        end_dt = start_dt + timedelta(hours=1)
+
+                        start_time = start_dt.isoformat() + 'Z'
+                        end_time = end_dt.isoformat() + 'Z'
+
+                    event = {
+                        'summary': f"PetTime: {title}",
+                        'description': data.get('description', ''),
+                        'start': {
+                            'dateTime': start_time,
+                            'timeZone': 'UTC',
+                        },
+                        'end': {
+                            'dateTime': end_time,
+                            'timeZone': 'UTC',
+                        },
+                    }
+
+                    service.events().insert(calendarId='primary', body=event).execute()
+                    print("Success Trying to Sync With Google")
+
+                except Exception as e:
+                    print(f" Error connecting to Google {e}")
+            
+            else:
+                print("No accesses to Google")
+
         return jsonify({
             'status': 'success', 
             'message': 'Task added successfully!',
             'task_id': new_task.task_id
-        }), 201
-        
+            }), 201
+    
     except Exception as e:
         db.session.rollback()
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        return jsonify({'status': 'error', 'message': str(e)}), 500     
+        
     
 
 ###############   Update Task   ###############
