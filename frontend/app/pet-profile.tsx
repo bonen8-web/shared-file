@@ -58,7 +58,7 @@ export default function PetProfileScreen() {
 
   const fetchPetDetails = async (uid: number) => {
     try {
-      const { data } = await api.get(`/users/${uid}/pets`);
+      const { data } = await api.get(`/api/users/${uid}/pets`);
       if (data.pets) {
         const foundPet = data.pets.find((p: any) => p.id === Number(id));
         setPet(foundPet);
@@ -80,7 +80,7 @@ export default function PetProfileScreen() {
 
   const handleSave = async () => {
     try {
-      await api.put(`/pets/${id}`, {
+      await api.put(`/api/pets/${id}`, {
         name: editName,
         species: editSpecies,
         breed: editBreed,
@@ -127,7 +127,7 @@ export default function PetProfileScreen() {
   const handleGenerateShareCode = async () => {
     setShareLoading(true);
     try {
-      const { data } = await api.post('/pets/generate_code', {
+      const { data } = await api.post('/api/pets/generate_code', {
         user_id: userId,
         pet_id: Number(id),
       });

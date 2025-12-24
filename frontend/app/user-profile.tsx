@@ -72,7 +72,7 @@ export default function UserProfileScreen() {
 
   const fetchUserData = async (id: number) => {
     try {
-      const { data } = await api.get(`/users/${id}`);
+      const { data } = await api.get(`/api/users/${id}`);
       setUser(data.user);
     } catch (error) {
       console.error('Error fetching user:', error);
@@ -81,7 +81,7 @@ export default function UserProfileScreen() {
 
   const fetchPets = async (id: number) => {
     try {
-      const { data } = await api.get(`/users/${id}/pets`);
+      const { data } = await api.get(`/api/users/${id}/pets`);
       setPets(data.pets || []);
     } catch (error) {
       console.error('Error fetching pets:', error);
@@ -100,7 +100,7 @@ export default function UserProfileScreen() {
     setJoining(true);
 
     try {
-      const { data } = await api.post('/pets/join_by_code', {
+      const { data } = await api.post('/api/pets/join_by_code', {
         user_id: userId,
         share_code: joinCode.trim().toUpperCase(),
       });

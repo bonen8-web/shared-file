@@ -48,7 +48,7 @@ export default function UpdateMedicalInfoScreen() {
 
   const fetchExistingData = async () => {
     try {
-      const { data } = await api.get(`/pets/${petId}/medical-info`);
+      const { data } = await api.get(`/api/pets/${petId}/medical-info`);
       if (data.medical_info) {
         const info = data.medical_info;
         setWeight(info.weight ? String(info.weight) : '');
@@ -68,7 +68,7 @@ export default function UpdateMedicalInfoScreen() {
 
   const handleSave = async () => {
     try {
-      const { data } = await api.put(`/pets/${petId}/medical-info`, {
+      const { data } = await api.put(`/api/pets/${petId}/medical-info`, {
         weight: weight ? parseFloat(weight) : null,
         allergies: allergies.trim() || null,
         medications: medications.trim() || null,

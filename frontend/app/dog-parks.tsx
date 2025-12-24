@@ -40,7 +40,7 @@ export default function DogParksScreen() {
 
   const fetchParks = async () => {
     try {
-      const { data } = await api.get('/dog_parks');
+      const { data } = await api.get('/api/dog_parks');
       setParks(data.parks || []);
       setFilteredParks(data.parks || []);
       

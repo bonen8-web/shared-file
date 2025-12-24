@@ -54,7 +54,7 @@ export default function PetHealthScreen() {
       
       if (userId) {
         // קריאה ל-API לקבלת רשימת החיות של המשתמש
-        const { data } = await api.get(`/users/${userId}/pets`);
+        const { data } = await api.get(`/api/users/${userId}/pets`);
         
         // עדכון ה-state עם רשימת החיות (או מערך ריק אם אין)
         setPets(data.pets || []);

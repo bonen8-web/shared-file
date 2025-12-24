@@ -43,7 +43,7 @@ export default function ViewMedicalInfoScreen() {
 
   const fetchMedicalInfo = async () => {
     try {
-      const { data } = await api.get(`/pets/${petId}/medical-info`);
+      const { data } = await api.get(`/api/pets/${petId}/medical-info`);
       setMedicalInfo(data.medical_info);
     } catch (error) {
       console.error('Error fetching medical info:', error);

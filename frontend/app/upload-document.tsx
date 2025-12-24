@@ -157,7 +157,7 @@ export default function UploadDocumentScreen() {
       }
 
       // ---------- שלב 2: שמירת המידע ב-DB דרך Render ----------
-      const { data } = await api.post('/save_document', {
+      const { data } = await api.post('/api/save_document', {
         pet_id: petId,
         document_name: selectedFile.name,
         file_url: cpanelData.file_url,

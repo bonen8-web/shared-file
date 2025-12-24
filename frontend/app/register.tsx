@@ -24,7 +24,7 @@ export default function RegisterScreen() {
     }
 
     try {
-      const { data } = await api.post('/register', {
+      const { data } = await api.post('/api/register', {
         first_name: firstName,
         last_name: lastName,
         email: email,

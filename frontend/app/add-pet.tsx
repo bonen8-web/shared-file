@@ -49,7 +49,7 @@ export default function AddPetScreen() {
     }
 
     try {
-      const { data } = await api.post('/pets', {
+      const { data } = await api.post('/api/pets', {
         user_id: userId,
         name: name.trim(),
         species: species.trim() || null,

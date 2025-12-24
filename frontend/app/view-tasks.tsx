@@ -62,7 +62,7 @@ export default function ViewTasksScreen() {
 
   const fetchTasks = async (uid: number) => {
     try {
-      const { data } = await api.get(`/users/${uid}/tasks`);
+      const { data } = await api.get(`/api/users/${uid}/tasks`);
       setTasks(data.tasks || []);
     } catch (error) {
       console.error('Error fetching tasks:', error);

@@ -83,7 +83,7 @@ export default function CreateTaskScreen() {
 
   const fetchPets = async (uid: number) => {
     try {
-      const { data } = await api.get(`/users/${uid}/pets`);
+      const { data } = await api.get(`/api/users/${uid}/pets`);
       setPets(data.pets || []);
     } catch (error) {
       console.error('Error fetching pets:', error);
@@ -92,7 +92,7 @@ export default function CreateTaskScreen() {
 
   const fetchPetOwners = async (petId: number) => {
     try {
-      const { data } = await api.get(`/pets/${petId}/owners`);
+      const { data } = await api.get(`/api/pets/${petId}/owners`);
       setPetOwners(data.owners || []);
     } catch (error) {
       console.error('Error fetching pet owners:', error);
@@ -204,7 +204,7 @@ export default function CreateTaskScreen() {
     setIsSubmitting(true);
 
     try {
-      await api.post('/tasks', {
+      await api.post('/api/tasks', {
         user_id: userId,
         assigned_user_id: assignedUserId,
         title: title.trim(),

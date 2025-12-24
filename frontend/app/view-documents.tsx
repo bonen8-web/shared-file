@@ -41,7 +41,7 @@ export default function ViewDocumentsScreen() {
 
   const fetchDocuments = async () => {
     try {
-      const { data } = await api.get(`/pets/${petId}/documents`);
+      const { data } = await api.get(`/api/pets/${petId}/documents`);
       setDocuments(data.documents || []);
     } catch (error) {
       console.error('Error fetching documents:', error);
