@@ -100,7 +100,7 @@ export default function UserProfileScreen() {
     setJoining(true);
 
     try {
-      const { data } = await api.post('/pets/join', {
+      const { data } = await api.post('/pets/join_by_code', {
         user_id: userId,
         share_code: joinCode.trim().toUpperCase(),
       });
