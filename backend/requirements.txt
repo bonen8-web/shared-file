@@ -19,3 +19,8 @@ gunicorn==21.2.0
 # Utilities
 python-dotenv==1.0.0
 requests==2.31.0
+
+# google calender sync
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
