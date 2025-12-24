@@ -9,7 +9,8 @@ import {
   ScrollView,
   Alert,
   Platform,
-  Modal
+  Modal,
+  Switch
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -42,6 +43,7 @@ export default function CreateTaskScreen() {
   const [selectedPet, setSelectedPet] = useState<number | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [syncToCalendar, setSyncToCalendar] = useState(false);
   
   // States לבוחר תאריך ושעה
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -159,9 +161,41 @@ export default function CreateTaskScreen() {
     setShowDatePicker(true);
   };
 
-  // שליחת המשימה
+
+  //While using the switch button to sync with Google Calendar
+  const toggleSync = async (value: boolean) => {
+  
+    //If switch is on:
+    if (value) {
+      try {
+        
+        const { data } = await api.get('/auth/google');
+
+      if (data.auth_url) {
+  const confirmed = window.confirm("Connect to Google Calendar?");
+  if (confirmed) {
+    setSyncToCalendar(true);
+    window.open(data.auth_url, '_blank');
+  } else {
+    setSyncToCalendar(false);
+  }
+}
+      } catch (error) {
+        console.error('Error fetching auth url:', error);
+        Alert.alert('Error', 'Could not connect to Google service');
+        setSyncToCalendar(false);
+      }
+    } 
+    else 
+    {  
+      setSyncToCalendar(false);
+    }
+  };
+
+
+  // Send task
   const handleSubmit = async () => {
-    // בדיקת וולידציה
+    // Validations
     if (!title.trim()) {
       Alert.alert('Error', 'Please enter a task title');
       return;
@@ -175,8 +209,9 @@ export default function CreateTaskScreen() {
         assigned_user_id: assignedUserId,
         title: title.trim(),
         description: description.trim() || null,
-        due_date: formatServerDate(dueDate),
+        due_date: dueDate ? dueDate.toISOString() : null,
         pet_id: selectedPet,
+        sync_to_calendar: syncToCalendar,
       });
 
       Alert.alert('Success', 'Task created successfully!', [
@@ -364,6 +399,21 @@ export default function CreateTaskScreen() {
               </View>
             </View>
           )}
+
+
+          {/* אפשרות סנכרון ליומן גוגל */}
+            <View style={styles.syncContainer}>
+              <View style={styles.syncTextContainer}>
+              <Text style={styles.syncLabel}>Sync to Google Calendar</Text>
+              <Text style={styles.syncSubLabel}>Task will be added to your personal calendar</Text>
+              </View>
+            <Switch
+              trackColor={{ false: "#767577", true: "#81b0ff" }}
+              thumbColor={syncToCalendar ? "#5AA0D6" : "#f4f3f4"}
+              onValueChange={toggleSync}
+              value={syncToCalendar}
+            />
+            </View>
 
           {/* כפתור שמירה */}
           <TouchableOpacity 
@@ -609,4 +659,31 @@ const styles = StyleSheet.create({
     color: '#5AA0D6',
     fontWeight: '600',
   },
+
+  syncContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.35)', // שקיפות דומה לשאר השדות שלך
+    padding: 15,
+    borderRadius: 15,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(100, 100, 100, 0.3)',
+  },
+  syncTextContainer: {
+    flex: 1,
+    marginRight: 10,
+    textAlign: 'left', // ודאי שזה מתאים לכיוון הטקסט שלך
+  },
+  syncLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#555',
+  },
+  syncSubLabel: {
+    fontSize: 12,
+    color: '#777',
+    marginTop: 2,
+  }
 });
