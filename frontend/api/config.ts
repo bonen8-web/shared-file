@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 // כתובת השרת המרכזית - שנה כאן אם הכתובת משתנה
-//const API_BASE_URL = 'http://192.162.2.148:5000/api';
-const API_BASE_URL = 'https://pettime8.onrender.com/api';
+const API_BASE_URL = 'http://orelbo2.mtacloud.co.il/api/login';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -11,6 +10,6 @@ const api = axios.create({
   },
   timeout: 10000, // 10 שניות timeout
 });
-
 export default api;
+
 
