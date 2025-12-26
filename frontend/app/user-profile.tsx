@@ -93,7 +93,11 @@ export default function UserProfileScreen() {
   // הצטרפות לחיה באמצעות קוד
   const handleJoinPet = async () => {
     if (!joinCode.trim()) {
-      Alert.alert('Error', 'Please enter a share code');
+      if (Platform.OS === 'web') {
+        alert('Please enter a share code');
+      } else {
+        Alert.alert('Error', 'Please enter a share code');
+      }
       return;
     }
 
@@ -105,14 +109,22 @@ export default function UserProfileScreen() {
         share_code: joinCode.trim().toUpperCase(),
       });
 
-      Alert.alert('Success', data.message);
+      if (Platform.OS === 'web') {
+        alert(data.message);
+      } else {
+        Alert.alert('Success', data.message);
+      }
       setJoinCode('');
       setShowJoinInput(false);
       if (userId) fetchPets(userId); // רענון רשימת החיות
     } catch (error: any) {
       console.error('Error joining pet:', error);
       const message = error.response?.data?.message || 'Failed to connect to server';
-      Alert.alert('Error', message);
+      if (Platform.OS === 'web') {
+        alert('Error: ' + message);
+      } else {
+        Alert.alert('Error', message);
+      }
     } finally {
       setJoining(false);
     }

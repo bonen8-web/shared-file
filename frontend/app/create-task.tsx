@@ -182,7 +182,11 @@ export default function CreateTaskScreen() {
 }
       } catch (error) {
         console.error('Error fetching auth url:', error);
-        Alert.alert('Error', 'Could not connect to Google service');
+        if (Platform.OS === 'web') {
+          alert('Error: Could not connect to Google service');
+        } else {
+          Alert.alert('Error', 'Could not connect to Google service');
+        }
         setSyncToCalendar(false);
       }
     } 
@@ -197,7 +201,11 @@ export default function CreateTaskScreen() {
   const handleSubmit = async () => {
     // Validations
     if (!title.trim()) {
-      Alert.alert('Error', 'Please enter a task title');
+      if (Platform.OS === 'web') {
+        alert('Please enter a task title');
+      } else {
+        Alert.alert('Error', 'Please enter a task title');
+      }
       return;
     }
 
@@ -214,16 +222,25 @@ export default function CreateTaskScreen() {
         sync_to_calendar: syncToCalendar,
       });
 
-      Alert.alert('Success', 'Task created successfully!', [
-        {
-          text: 'OK',
-          onPress: () => router.push('/view-tasks'),
-        },
-      ]);
+      if (Platform.OS === 'web') {
+        alert('Task created successfully!');
+        router.push('/view-tasks');
+      } else {
+        Alert.alert('Success', 'Task created successfully!', [
+          {
+            text: 'OK',
+            onPress: () => router.push('/view-tasks'),
+          },
+        ]);
+      }
     } catch (error: any) {
       console.error('Error creating task:', error);
       const message = error.response?.data?.message || 'Failed to connect to server';
-      Alert.alert('Error', message);
+      if (Platform.OS === 'web') {
+        alert('Error: ' + message);
+      } else {
+        Alert.alert('Error', message);
+      }
     } finally {
       setIsSubmitting(false);
     }

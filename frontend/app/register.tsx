@@ -19,7 +19,11 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     console.log('SIGN UP PRESSED');
     if (!firstName || !email || !password) {
-      Alert.alert("Error", "Please fill in all required fields (First Name, Email, Password)");
+      if (Platform.OS === 'web') {
+        alert("Please fill in all required fields (First Name, Email, Password)");
+      } else {
+        Alert.alert("Error", "Please fill in all required fields (First Name, Email, Password)");
+      }
       return;
     }
 
@@ -45,7 +49,11 @@ export default function RegisterScreen() {
     } catch (error: any) {
       console.error(error);
       const message = error.response?.data?.message || 'Could not connect to the server';
-      Alert.alert("Registration Error", message);
+      if (Platform.OS === 'web') {
+        alert("Registration Error: " + message);
+      } else {
+        Alert.alert("Registration Error", message);
+      }
     }
   };
 
