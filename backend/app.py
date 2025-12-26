@@ -471,16 +471,17 @@ def add_task():
                 return jsonify({'status': 'error', 'message': 'Assigned user ID is not an owner of this pet.'}), 403
     
 
-    # Converting date object from string to date format
+    # Converting date string to datetime object (preserving time)
     due_date_obj = None
     if raw_due_date:
         try:
             if "T" in raw_due_date:
-                date_only = raw_due_date.split('T')[0]
-                due_date_obj = datetime.strptime(date_only, '%Y-%m-%d').date()
-            
+                # ISO format with time: "2025-12-26T15:30:00.000Z"
+                clean_date = raw_due_date.replace('Z', '').split('.')[0]  # Remove Z and milliseconds
+                due_date_obj = datetime.strptime(clean_date, '%Y-%m-%dT%H:%M:%S')
             else:
-                due_date_obj = datetime.strptime(raw_due_date, '%Y-%m-%d').date()
+                # Date only format: "2025-12-26" - set default time to noon
+                due_date_obj = datetime.strptime(raw_due_date, '%Y-%m-%d')
 
         except ValueError as e:
             print(f"Date Invalid {e}")
