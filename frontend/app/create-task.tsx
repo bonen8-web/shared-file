@@ -253,6 +253,11 @@ export default function CreateTaskScreen() {
         style={styles.background}
         resizeMode="stretch"
       >
+        {/* כפתור חזרה */}
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
+
         {/* כותרת העמוד */}
         <Text style={styles.pageTitle}>Create Task</Text>
         
@@ -524,6 +529,18 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 10,
+    padding: 10,
+  },
+  backButtonText: {
+    fontSize: 18,
+    color: '#5AA0D6',
+    fontWeight: '600',
   },
   pageTitle: {
     fontSize: 32,
