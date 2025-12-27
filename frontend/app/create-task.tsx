@@ -303,7 +303,7 @@ export default function CreateTaskScreen() {
             {Platform.OS === 'web' ? (
               <input
                 type="datetime-local"
-                value={dueDate ? dueDate.toISOString().slice(0, 16) : ''}
+                value={dueDate ? `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, '0')}-${String(dueDate.getDate()).padStart(2, '0')}T${String(dueDate.getHours()).padStart(2, '0')}:${String(dueDate.getMinutes()).padStart(2, '0')}` : ''}
                 onChange={(e) => {
                   if (e.target.value) {
                     setDueDate(new Date(e.target.value));
@@ -311,7 +311,7 @@ export default function CreateTaskScreen() {
                     setDueDate(null);
                   }
                 }}
-                min={new Date().toISOString().slice(0, 16)}
+                min={(() => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`; })()}
                 style={{
                   backgroundColor: 'rgba(255, 255, 255, 0.35)',
                   borderRadius: 15,
