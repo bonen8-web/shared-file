@@ -4,7 +4,5 @@
 # Ignore dist folder (web build)
 dist/
 
-# Ignore unnecessary files
-*.md
-.git
-
+# Ignore node_modules (will be installed fresh)
+node_modules/

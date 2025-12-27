@@ -1,41 +1,58 @@
-// מייבאים רכיבים מ-React כדי שנוכל לבנות את המסך
+// ==========================================
+// עמוד הבית (Home Screen)
+// ==========================================
+// זהו המסך הראשי של האפליקציה אחרי התחברות.
+// מכיל 3 כפתורים עגולים שמובילים לפיצ'רים השונים.
+
+// ייבוא React
 import React from 'react';
 
-import Homepage from '../assets/images/Homepage.png';
-import UserIcon from '../assets/images/User icon.png';
-import Logo from '../assets/images/Logo.png';
+// ==========================================
+// ייבוא תמונות
+// ==========================================
+import Homepage from '../assets/images/Homepage.png';    // תמונת הרקע
+import UserIcon from '../assets/images/User icon.png';  // אייקון משתמש (פינה שמאלית)
+import Logo from '../assets/images/Logo.png';            // הלוגו של האפליקציה
 
-// מייבאים רכיבים מ-React Native לבניית ממשק
+// ייבוא רכיבים מ-React Native
 import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  ImageBackground, 
-  Image
+  View,               // קונטיינר בסיסי
+  Text,               // טקסט
+  StyleSheet,         // סגנונות
+  TouchableOpacity,   // כפתור לחיץ
+  ImageBackground,    // תמונת רקע
+  Image               // תמונה רגילה
 } from 'react-native';
 
-// מייבאים SafeAreaView כדי לא לחפוף עם סרגלי המערכת
+// ייבוא SafeAreaView - מונע חפיפה עם סרגלי המערכת
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// מייבאים את הניווט של expo-router כדי לעבור בין מסכים
+// ייבוא הניווט מ-expo-router
 import { useRouter } from 'expo-router';
 
-// פונקציית הקומפוננטה – זה המסך עצמו
+// ==========================================
+// הקומפוננטה הראשית - מסך הבית
+// ==========================================
 export default function HomeScreen() {
 
-  // router מאפשר לנו לעבור למסכים אחרים
+  // הוק לניווט - מאפשר לעבור לעמודים אחרים
   const router = useRouter();
 
+  // ==========================================
+  // תצוגת המסך (JSX)
+  // ==========================================
   return (
-    // SafeAreaView עוטף הכל כדי לא לחפוף עם סרגלי המערכת
+    // SafeAreaView - עוטף הכל ומונע חפיפה עם סרגלי המערכת
     <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      
+      {/* תמונת הרקע */}
       <ImageBackground
         source={Homepage}
         style={styles.background}
         resizeMode="stretch"
       >
-        {/* אייקון משתמש - לחיצה מעבירה לעמוד פרופיל */}
+        {/* ---- אייקון משתמש (פינה שמאלית עליונה) ---- */}
+        {/* לחיצה מעבירה לעמוד פרופיל המשתמש */}
         <TouchableOpacity 
           style={styles.userIconButton} 
           onPress={() => router.push('/user-profile')}
@@ -43,15 +60,19 @@ export default function HomeScreen() {
           <Image source={UserIcon} style={styles.userIcon} resizeMode="contain" />
         </TouchableOpacity>
 
-        {/* לוגו האפליקציה - ממורכז מעל הכותרת */}
+        {/* ---- לוגו וכותרת ---- */}
         <View style={styles.logoContainer}>
           <Image source={Logo} style={styles.logo} resizeMode="contain" />
-          {/* כותרת HOME */}
           <Text style={styles.pageTitle}>Home</Text>
         </View>
         
+        {/* ---- הכפתורים העגולים ---- */}
         <View style={styles.circleContainer}>
+          
+          {/* שורה ראשונה: My Tasks + Dog Parks */}
           <View style={styles.row}>
+            
+            {/* כפתור My Tasks - כחול */}
             <TouchableOpacity 
               style={[styles.circle, { backgroundColor: '#5AA0D6' }]}
               onPress={() => router.push('/tasks')}
@@ -59,6 +80,7 @@ export default function HomeScreen() {
               <Text style={styles.circleText}>My Tasks</Text>
             </TouchableOpacity>
 
+            {/* כפתור Dog Parks - טורקיז */}
             <TouchableOpacity 
               style={[styles.circle, { backgroundColor: '#36C1C8' }]}
               onPress={() => router.push('/dog-parks')}
@@ -67,7 +89,10 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* שורה שנייה: Pet Health (ממורכז) */}
           <View style={styles.rowCenter}>
+            
+            {/* כפתור Pet Health - ירוק */}
             <TouchableOpacity 
               style={[styles.circle, { backgroundColor: '#6ED29A' }]}
               onPress={() => router.push('/pet-health')}
@@ -82,99 +107,109 @@ export default function HomeScreen() {
   );
 }
 
-// כאן נמצא ה"CSS" של React Native
+// ==========================================
+// סגנונות (Styles) - כמו CSS
+// ==========================================
 const styles = StyleSheet.create({
 
-safeArea: {
-  flex: 1,
-  backgroundColor: 'rgb(217, 229, 239)',
-},
+  // עוטף את כל המסך
+  safeArea: {
+    flex: 1,
+    backgroundColor: 'rgb(217, 229, 239)',  // צבע רקע תואם לתמונה
+  },
 
-background: {
-  flex: 1,
-  width: '100%',
-  height: '100%',
-},
+  // תמונת הרקע
+  background: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
 
-// אייקון משתמש
-userIconButton: {
-  position: 'absolute',
-  top: 50,
-  left: 20,
-  zIndex: 10,
-},
+  // ---- אייקון משתמש ----
+  userIconButton: {
+    position: 'absolute',  // מיקום קבוע
+    top: 50,               // מרחק מלמעלה
+    left: 20,              // מרחק משמאל
+    zIndex: 10,            // מעל אלמנטים אחרים
+  },
 
-userIcon: {
-  width: 65,
-  height: 65,
-},
+  userIcon: {
+    width: 65,
+    height: 65,
+  },
 
-// לוגו האפליקציה - ממורכז מעל הכותרת
-logoContainer: {
-  position: 'absolute',
-  top: 70,
-  left: 0,
-  right: 0,
-  alignItems: 'center',
-  zIndex: 5,
-},
+  // ---- לוגו ממורכז ----
+  logoContainer: {
+    position: 'absolute',
+    top: 70,
+    left: 0,
+    right: 0,
+    alignItems: 'center',  // ממרכז אופקית
+    zIndex: 5,
+  },
 
-logo: {
-  width: 70,
-  height: 70,
-  marginBottom: -15,
-},
+  logo: {
+    width: 70,
+    height: 70,
+    marginBottom: -15,  // קירוב לכותרת
+  },
 
-// הקונטיינר של כל העיגולים
-circleContainer: {
-  flex: 1,
-  justifyContent: 'center',
-  alignItems: 'center',
-  paddingHorizontal: 20,
-  marginTop: -50,
-},
+  // ---- כותרת העמוד ----
+  pageTitle: {
+    fontSize: 32,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+    letterSpacing: 1,
+  },
 
-row: {
-  flexDirection: "row",
-  justifyContent: "center",
-  gap: 20,
-  width: "100%",
-  marginBottom: 15,
-},
+  // ---- קונטיינר הכפתורים העגולים ----
+  circleContainer: {
+    flex: 1,
+    justifyContent: 'center',  // ממרכז אנכית
+    alignItems: 'center',       // ממרכז אופקית
+    paddingHorizontal: 20,
+    marginTop: -50,             // מעלה את העיגולים קצת למעלה
+  },
 
-rowCenter: {
-  flexDirection: "row",
-  justifyContent: "center",
-  width: "100%",
-  marginTop: 0,
-},
+  // שורה של 2 עיגולים
+  row: {
+    flexDirection: "row",       // מסדר אופקית
+    justifyContent: "center",
+    gap: 20,                    // רווח בין העיגולים
+    width: "100%",
+    marginBottom: 15,
+  },
 
-circle: {
-  width: 120,
-  height: 120,
-  backgroundColor: "#6EC3FF",
-  borderRadius: 60,
-  justifyContent: "center",
-  alignItems: "center",
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.25,
-  shadowRadius: 6,
-  elevation: 6,
-},
+  // שורה ממורכזת (עיגול בודד)
+  rowCenter: {
+    flexDirection: "row",
+    justifyContent: "center",
+    width: "100%",
+    marginTop: 0,
+  },
 
-circleText: {
-  color: '#fff',
-  fontSize: 14,
-  fontWeight: 'bold',
-  textAlign: 'center',
-},
+  // ---- העיגול עצמו ----
+  circle: {
+    width: 120,
+    height: 120,
+    backgroundColor: "#6EC3FF",
+    borderRadius: 60,            // חצי מהרוחב = עיגול מושלם
+    justifyContent: "center",
+    alignItems: "center",
+    // צל (shadow)
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 6,                // צל באנדרואיד
+  },
 
-pageTitle: {
-  fontSize: 32,
-  fontWeight: '600',
-  color: '#333',
-  textAlign: 'center',
-  letterSpacing: 1,
-},
+  // טקסט בתוך העיגול
+  circleText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
 });
