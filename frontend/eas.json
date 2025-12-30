@@ -7,8 +7,7 @@
     "preview": {
       "android": {
         "buildType": "apk"
-      },
-      "config": "eas.json"
+      }
     },
     "production": {
       "android": {
