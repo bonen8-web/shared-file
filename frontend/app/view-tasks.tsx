@@ -14,7 +14,7 @@ import api from '../api/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ייבוא תמונת הרקע
-import TaskScreen from '../assets/images/Task screen.png';
+import TaskScreen from '../assets/images/task-screen.png';
 
 // צבעים לנקודות - כל משימה תקבל צבע מהמערך
 const bulletColors = [
@@ -76,18 +76,32 @@ export default function ViewTasksScreen() {
     }
   };
 
-  // פונקציה לסימון משימה כהושלמה/לא הושלמה
+  // פונקציה לסימון משימה כהושלמה/לא הושלמה - עדכון מיידי (optimistic)
   const toggleTaskCompletion = async (taskId: number, currentStatus: boolean) => {
+    // עדכון מיידי של ה-UI (לפני תשובת השרת)
+    const newStatus = !currentStatus;
+    setTasks(prevTasks => {
+      const updatedTasks = prevTasks.map(task => 
+        task.id === taskId ? { ...task, is_completed: newStatus } : task
+      );
+      // מיון מחדש: לא הושלמו קודם, הושלמו אחרונים (לפי זמן עדכון)
+      return updatedTasks.sort((a, b) => {
+        if (a.is_completed === b.is_completed) return 0;
+        return a.is_completed ? 1 : -1;
+      });
+    });
+    
+    // שליחה לשרת ברקע
     try {
       await api.put(`/api/tasks/${taskId}`, {
-        is_completed: !currentStatus
+        is_completed: newStatus
       });
-      // רענון הרשימה
+    } catch (error) {
+      console.error('Error updating task:', error);
+      // במקרה של שגיאה - החזרת המצב הקודם
       if (userId) {
         fetchTasks(userId);
       }
-    } catch (error) {
-      console.error('Error updating task:', error);
     }
   };
 
@@ -96,18 +110,30 @@ export default function ViewTasksScreen() {
     return bulletColors[index % bulletColors.length];
   };
 
-  // פונקציה לפורמט תאריך ושעה - ללא המרת timezone
+  // פונקציה לפורמט תאריך ושעה - מציגה את הזמן כפי שנשמר (ללא המרת timezone)
   const formatDateTime = (dateString: string | null) => {
     if (!dateString) return '';
-    // מפרש את התאריך כשעה מקומית (בלי המרת timezone)
-    const parts = dateString.replace('T', ' ').replace('Z', '').split(/[- :]/);
+    
+    // אם התאריך מכיל 'Z' או offset - זה UTC, צריך להמיר לזמן מקומי
+    if (dateString.includes('Z') || dateString.includes('+')) {
+      const date = new Date(dateString);
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      const hour = date.getHours().toString().padStart(2, '0');
+      const minute = date.getMinutes().toString().padStart(2, '0');
+      return `${day}/${month}/${year} ${hour}:${minute}`;
+    }
+    
+    // אחרת - התאריך הוא כבר בזמן מקומי, מציג כמו שהוא
+    const parts = dateString.replace('T', ' ').split(/[- :]/);
     const year = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1; // חודשים מתחילים מ-0
+    const month = parseInt(parts[1]);
     const day = parseInt(parts[2]);
     const hour = parseInt(parts[3]) || 0;
     const minute = parseInt(parts[4]) || 0;
     
-    return `${day.toString().padStart(2, '0')}/${(month + 1).toString().padStart(2, '0')}/${year} ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+    return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year} ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
   };
 
   return (

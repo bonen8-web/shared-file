@@ -23,7 +23,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'; // אחס�
 import * as DocumentPicker from 'expo-document-picker';        // בחירת קבצים מהמכשיר
 
 // תמונת רקע
-import AddNewDoc from '../assets/images/Add New Doc.png';
+import AddNewDoc from '../assets/images/add-new-doc.png';
 
 export default function UploadDocumentScreen() {
   const router = useRouter();  // הוק לניווט בין עמודים
@@ -123,6 +123,9 @@ export default function UploadDocumentScreen() {
 
     // ---------- שלב 1: העלאה ישירה ל-cPanel ----------
     try {
+      console.log('Starting upload to:', CPANEL_UPLOAD_URL);
+      console.log('Selected file:', selectedFile);
+      
       // יצירת FormData להעלאה ל-cPanel
       const cpanelFormData = new FormData();
       
@@ -134,8 +137,12 @@ export default function UploadDocumentScreen() {
         cpanelFormData.append('file', blob, selectedFile.name);
       } else {
         // ב-Mobile: משתמשים באובייקט עם uri
+        const fileUri = Platform.OS === 'android' 
+          ? selectedFile.uri 
+          : selectedFile.uri.replace('file://', '');
+        
         cpanelFormData.append('file', {
-          uri: selectedFile.uri,
+          uri: fileUri,
           name: selectedFile.name,
           type: selectedFile.mimeType || 'application/octet-stream',
         } as any);
@@ -144,13 +151,27 @@ export default function UploadDocumentScreen() {
       // הוספת מפתח אבטחה
       cpanelFormData.append('key', CPANEL_UPLOAD_KEY);
 
+      console.log('Sending request...');
+      
       // שליחה ישירה ל-cPanel
       const cpanelResponse = await fetch(CPANEL_UPLOAD_URL, {
         method: 'POST',
         body: cpanelFormData,
+        headers: {
+          'Accept': 'application/json',
+        },
       });
       
-      const cpanelData = await cpanelResponse.json();
+      console.log('Response status:', cpanelResponse.status);
+      const responseText = await cpanelResponse.text();
+      console.log('Response text:', responseText);
+      
+      let cpanelData;
+      try {
+        cpanelData = JSON.parse(responseText);
+      } catch (e) {
+        throw new Error('Server returned invalid JSON: ' + responseText.substring(0, 100));
+      }
       
       if (cpanelData.status !== 'success') {
         throw new Error(cpanelData.message || 'Upload to cPanel failed');
