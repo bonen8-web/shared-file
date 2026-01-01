@@ -63,11 +63,31 @@ export default function ViewTasksScreen() {
   const fetchTasks = async (uid: number) => {
     try {
       const { data } = await api.get(`/api/users/${uid}/tasks`);
-      setTasks(data.tasks || []);
+      // מיון: קודם משימות שלא הושלמו, אחר כך משימות שהושלמו
+      const sortedTasks = (data.tasks || []).sort((a: Task, b: Task) => {
+        if (a.is_completed === b.is_completed) return 0;
+        return a.is_completed ? 1 : -1;
+      });
+      setTasks(sortedTasks);
     } catch (error) {
       console.error('Error fetching tasks:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // פונקציה לסימון משימה כהושלמה/לא הושלמה
+  const toggleTaskCompletion = async (taskId: number, currentStatus: boolean) => {
+    try {
+      await api.put(`/api/tasks/${taskId}`, {
+        is_completed: !currentStatus
+      });
+      // רענון הרשימה
+      if (userId) {
+        fetchTasks(userId);
+      }
+    } catch (error) {
+      console.error('Error updating task:', error);
     }
   };
 
@@ -76,17 +96,18 @@ export default function ViewTasksScreen() {
     return bulletColors[index % bulletColors.length];
   };
 
-  // פונקציה לפורמט תאריך ושעה
+  // פונקציה לפורמט תאריך ושעה - ללא המרת timezone
   const formatDateTime = (dateString: string | null) => {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleString('he-IL', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    // מפרש את התאריך כשעה מקומית (בלי המרת timezone)
+    const parts = dateString.replace('T', ' ').replace('Z', '').split(/[- :]/);
+    const year = parseInt(parts[0]);
+    const month = parseInt(parts[1]) - 1; // חודשים מתחילים מ-0
+    const day = parseInt(parts[2]);
+    const hour = parseInt(parts[3]) || 0;
+    const minute = parseInt(parts[4]) || 0;
+    
+    return `${day.toString().padStart(2, '0')}/${(month + 1).toString().padStart(2, '0')}/${year} ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -123,16 +144,25 @@ export default function ViewTasksScreen() {
             >
               {tasks.map((task, index) => (
                 <View key={task.id} style={styles.taskItem}>
-                  {/* נקודה צבעונית */}
-                  <View 
-                    style={[
-                      styles.bullet, 
-                      { backgroundColor: getBulletColor(index) }
-                    ]} 
-                  />
+                  {/* צ'קבוקס לסימון השלמה */}
+                  <TouchableOpacity 
+                    style={styles.checkbox}
+                    onPress={() => toggleTaskCompletion(task.id, task.is_completed)}
+                  >
+                    <View style={[
+                      styles.checkboxInner,
+                      task.is_completed && styles.checkboxChecked
+                    ]}>
+                      {task.is_completed && <Text style={styles.checkmark}>✓</Text>}
+                    </View>
+                  </TouchableOpacity>
                   
-                  {/* תוכן המשימה */}
-                  <View style={styles.taskContent}>
+                  {/* תוכן המשימה - לחיצה לעריכה */}
+                  <TouchableOpacity 
+                    style={styles.taskContent}
+                    onPress={() => router.push(`/edit-task?taskId=${task.id}`)}
+                    activeOpacity={0.7}
+                  >
                     <Text 
                       style={[
                         styles.taskTitle,
@@ -143,13 +173,19 @@ export default function ViewTasksScreen() {
                     </Text>
                     
                     {task.description && (
-                      <Text style={styles.taskDescription}>
+                      <Text style={[
+                        styles.taskDescription,
+                        task.is_completed && styles.completedText
+                      ]}>
                         {task.description}
                       </Text>
                     )}
                     
                     {task.due_date && (
-                      <Text style={styles.taskDueDate}>
+                      <Text style={[
+                        styles.taskDueDate,
+                        task.is_completed && styles.completedText
+                      ]}>
                         📅 {formatDateTime(task.due_date)}
                       </Text>
                     )}
@@ -160,12 +196,15 @@ export default function ViewTasksScreen() {
                         👤 Assigned by {task.created_by_name}
                       </Text>
                     )}
-                  </View>
+                  </TouchableOpacity>
                   
-                  {/* סימן וי אם המשימה הושלמה */}
-                  {task.is_completed && (
-                    <Text style={styles.completedIcon}>✓</Text>
-                  )}
+                  {/* אייקון עריכה */}
+                  <TouchableOpacity 
+                    onPress={() => router.push(`/edit-task?taskId=${task.id}`)}
+                    style={styles.editButton}
+                  >
+                    <Text style={styles.editIcon}>✏️</Text>
+                  </TouchableOpacity>
                 </View>
               ))}
             </ScrollView>
@@ -204,8 +243,8 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   backButtonText: {
-    fontSize: 18,
-    color: '#5AA0D6',
+    color: '#333',
+    fontSize: 14,
     fontWeight: '600',
   },
   pageTitle: {
@@ -305,6 +344,39 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: '#4CAF50',
     fontWeight: 'bold',
+  },
+  editIcon: {
+    fontSize: 18,
+    color: '#5AA0D6',
+  },
+  editButton: {
+    padding: 5,
+  },
+  checkbox: {
+    marginRight: 12,
+    justifyContent: 'center',
+  },
+  checkboxInner: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#5AA0D6',
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#4CAF50',
+    borderColor: '#4CAF50',
+  },
+  checkmark: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  completedText: {
+    color: '#999',
   },
   addButton: {
     flexDirection: 'row',

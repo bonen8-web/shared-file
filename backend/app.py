@@ -602,6 +602,53 @@ def update_task(task_id):
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
+###############   Get Single Task   ###############
+
+@app.route('/api/tasks/<int:task_id>', methods=['GET'])
+def get_task(task_id):
+    task = Task.query.get(task_id)
+    
+    if not task:
+        return jsonify({'status': 'error', 'message': 'Task not found'}), 404
+    
+    # Get creator info
+    creator = User.query.get(task.user_id)
+    creator_name = creator.first_name if creator else 'Unknown'
+    
+    return jsonify({
+        'status': 'success',
+        'task': {
+            'id': task.task_id,
+            'title': task.title,
+            'description': task.description,
+            'is_completed': task.is_completed,
+            'due_date': task.due_date.isoformat() if task.due_date else None,
+            'pet_id': task.pet_id,
+            'created_by_id': task.user_id,
+            'created_by_name': creator_name,
+            'assigned_to_id': task.assigned_user_id
+        }
+    }), 200
+
+
+###############   Delete Task   ###############
+
+@app.route('/api/tasks/<int:task_id>', methods=['DELETE'])
+def delete_task(task_id):
+    task = Task.query.get(task_id)
+    
+    if not task:
+        return jsonify({'status': 'error', 'message': 'Task not found'}), 404
+    
+    try:
+        db.session.delete(task)
+        db.session.commit()
+        return jsonify({'status': 'success', 'message': 'Task deleted successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
 ###############   Get Tasks Info By User ID   ###############
 
 @app.route ('/api/users/<int:user_id>/tasks', methods = ['GET'])
@@ -632,7 +679,7 @@ def get_user_tasks(user_id):
             'title': task.title,
             'description': task.description, 
             'is_completed': task.is_completed, 
-            'due_date': str(task.due_date) if task.due_date else None
+            'due_date': task.due_date.isoformat() if task.due_date else None
         })
 
     return jsonify({'status': 'success', 'tasks': tasks_list}), 200 

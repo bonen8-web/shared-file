@@ -168,18 +168,41 @@ export default function CreateTaskScreen() {
     //If switch is on:
     if (value) {
       try {
-        
         const { data } = await api.get('/api/auth/google');
 
-      if (data.auth_url) {
-  const confirmed = window.confirm("Connect to Google Calendar?");
-  if (confirmed) {
-    setSyncToCalendar(true);
-    window.open(data.auth_url, '_blank');
-  } else {
-    setSyncToCalendar(false);
-  }
-}
+        if (data.auth_url) {
+          if (Platform.OS === 'web') {
+            // Web - use window APIs
+            const confirmed = window.confirm("Connect to Google Calendar?");
+            if (confirmed) {
+              setSyncToCalendar(true);
+              window.open(data.auth_url, '_blank');
+            } else {
+              setSyncToCalendar(false);
+            }
+          } else {
+            // Mobile - use Alert and Linking
+            const Linking = require('react-native').Linking;
+            Alert.alert(
+              'Connect to Google Calendar',
+              'Do you want to connect to Google Calendar?',
+              [
+                {
+                  text: 'Cancel',
+                  onPress: () => setSyncToCalendar(false),
+                  style: 'cancel',
+                },
+                {
+                  text: 'Connect',
+                  onPress: async () => {
+                    setSyncToCalendar(true);
+                    await Linking.openURL(data.auth_url);
+                  },
+                },
+              ]
+            );
+          }
+        }
       } catch (error) {
         console.error('Error fetching auth url:', error);
         if (Platform.OS === 'web') {
@@ -538,8 +561,8 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   backButtonText: {
-    fontSize: 18,
-    color: '#5AA0D6',
+    color: '#333',
+    fontSize: 14,
     fontWeight: '600',
   },
   pageTitle: {

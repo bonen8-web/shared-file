@@ -8,10 +8,12 @@ import {
   TextInput,
   ScrollView,
   Alert,
-  Platform
+  Platform,
+  Modal
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../api/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -22,10 +24,18 @@ export default function AddPetScreen() {
   
   const [name, setName] = useState('');
   const [species, setSpecies] = useState('');
+  const [customSpecies, setCustomSpecies] = useState('');
   const [breed, setBreed] = useState('');
   const [gender, setGender] = useState('');
-  const [birthDate, setBirthDate] = useState('');
+  const [birthDate, setBirthDate] = useState<Date | null>(null);
   const [userId, setUserId] = useState<number | null>(null);
+  
+  // States לבוחר תאריך
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [tempDate, setTempDate] = useState(new Date());
+
+  // רשימת סוגי חיות
+  const speciesOptions = ['Dog', 'Cat', 'Bird', 'Fish', 'Rabbit', 'Hamster', 'Guinea Pig', 'Turtle', 'Other'];
 
   useEffect(() => {
     loadUserId();
@@ -38,6 +48,37 @@ export default function AddPetScreen() {
     }
   };
 
+  // פתיחת בוחר התאריך
+  const openDatePicker = () => {
+    setTempDate(birthDate || new Date());
+    setShowDatePicker(true);
+  };
+
+  // טיפול בשינוי תאריך
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+      if (event.type === 'set' && selectedDate) {
+        setBirthDate(selectedDate);
+      }
+    } else {
+      if (selectedDate) {
+        setTempDate(selectedDate);
+      }
+    }
+  };
+
+  // אישור התאריך (iOS)
+  const confirmDate = () => {
+    setBirthDate(tempDate);
+    setShowDatePicker(false);
+  };
+
+  // פורמט תאריך לתצוגה
+  const formatDate = (date: Date) => {
+    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+  };
+
   const handleAddPet = async () => {
     if (!name.trim()) {
       if (Platform.OS === 'web') {
@@ -48,14 +89,17 @@ export default function AddPetScreen() {
       return;
     }
 
+    // קביעת הסוג הסופי - אם בחרו "Other", משתמשים בטקסט שהוקלד
+    const finalSpecies = species === 'Other' ? customSpecies.trim() : species;
+
     try {
       const { data } = await api.post('/api/pets', {
         user_id: userId,
         name: name.trim(),
-        species: species.trim() || null,
+        species: finalSpecies || null,
         breed: breed.trim() || null,
         gender: gender || null,
-        birth_date: birthDate || null,
+        birth_date: birthDate ? birthDate.toISOString().split('T')[0] : null,
       });
 
       if (Platform.OS === 'web') {
@@ -114,12 +158,34 @@ export default function AddPetScreen() {
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Species</Text>
-              <TextInput
-                style={styles.input}
-                value={species}
-                onChangeText={setSpecies}
-                placeholder="e.g. Dog, Cat, Bird"
-              />
+              <View style={styles.speciesContainer}>
+                {speciesOptions.map((option) => (
+                  <TouchableOpacity
+                    key={option}
+                    style={[
+                      styles.speciesButton,
+                      species === option && styles.speciesButtonActive
+                    ]}
+                    onPress={() => setSpecies(option)}
+                  >
+                    <Text style={[
+                      styles.speciesButtonText,
+                      species === option && styles.speciesButtonTextActive
+                    ]}>
+                      {option}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              {/* שדה להקלדה חופשית אם בחרו "Other" */}
+              {species === 'Other' && (
+                <TextInput
+                  style={[styles.input, { marginTop: 10 }]}
+                  value={customSpecies}
+                  onChangeText={setCustomSpecies}
+                  placeholder="Enter species type"
+                />
+              )}
             </View>
 
             <View style={styles.inputGroup}>
@@ -152,13 +218,66 @@ export default function AddPetScreen() {
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Birth Date</Text>
-              <TextInput
-                style={styles.input}
-                value={birthDate}
-                onChangeText={setBirthDate}
-                placeholder="YYYY-MM-DD"
-              />
+              {Platform.OS === 'web' ? (
+                <input
+                  type="date"
+                  style={{
+                    backgroundColor: '#f8f9fa',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: 10,
+                    padding: 12,
+                    fontSize: 16,
+                    width: '100%',
+                  }}
+                  value={birthDate ? birthDate.toISOString().split('T')[0] : ''}
+                  onChange={(e) => setBirthDate(e.target.value ? new Date(e.target.value) : null)}
+                />
+              ) : (
+                <TouchableOpacity style={styles.dateButton} onPress={openDatePicker}>
+                  <Text style={styles.dateButtonText}>
+                    {birthDate ? formatDate(birthDate) : 'Select birth date'}
+                  </Text>
+                  <Text style={styles.dateIcon}>📅</Text>
+                </TouchableOpacity>
+              )}
             </View>
+
+            {/* בוחר תאריך לאנדרואיד */}
+            {Platform.OS === 'android' && showDatePicker && (
+              <DateTimePicker
+                value={tempDate}
+                mode="date"
+                display="default"
+                onChange={onDateChange}
+                maximumDate={new Date()}
+              />
+            )}
+
+            {/* מודל בוחר תאריך ל-iOS */}
+            {Platform.OS === 'ios' && (
+              <Modal visible={showDatePicker} transparent animationType="slide">
+                <View style={styles.modalOverlay}>
+                  <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                      <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                        <Text style={styles.modalCancel}>Cancel</Text>
+                      </TouchableOpacity>
+                      <Text style={styles.modalTitle}>Select Date</Text>
+                      <TouchableOpacity onPress={confirmDate}>
+                        <Text style={styles.modalDone}>Done</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <DateTimePicker
+                      value={tempDate}
+                      mode="date"
+                      display="spinner"
+                      onChange={onDateChange}
+                      maximumDate={new Date()}
+                    />
+                  </View>
+                </View>
+              </Modal>
+            )}
 
             <TouchableOpacity style={styles.submitButton} onPress={handleAddPet}>
               <Text style={styles.submitButtonText}>Add Pet</Text>
@@ -261,6 +380,31 @@ const styles = StyleSheet.create({
   genderButtonTextActive: {
     color: '#fff',
   },
+  speciesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  speciesButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    backgroundColor: '#f8f9fa',
+  },
+  speciesButtonActive: {
+    backgroundColor: '#6ED29A',
+    borderColor: '#6ED29A',
+  },
+  speciesButtonText: {
+    color: '#666',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  speciesButtonTextActive: {
+    color: '#fff',
+  },
   submitButton: {
     backgroundColor: '#6ED29A',
     padding: 15,
@@ -272,6 +416,56 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  dateButton: {
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 10,
+    padding: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dateButtonText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  dateIcon: {
+    fontSize: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  modalCancel: {
+    fontSize: 16,
+    color: '#999',
+  },
+  modalDone: {
+    fontSize: 16,
+    color: '#6ED29A',
+    fontWeight: '600',
   },
 });
 

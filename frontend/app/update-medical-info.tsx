@@ -185,9 +185,10 @@ export default function UpdateMedicalInfoScreen() {
               <TextInput
                 style={styles.input}
                 value={vetPhone}
-                onChangeText={setVetPhone}
+                onChangeText={(text) => setVetPhone(text.replace(/[^0-9-+() ]/g, ''))}
                 placeholder="Phone number"
                 keyboardType="phone-pad"
+                maxLength={15}
               />
             </View>
 
