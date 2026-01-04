@@ -136,7 +136,10 @@ export default function PetHealthScreen() {
           {showPetList && (
             <View style={styles.petList}>
               {/* ScrollView מאפשר גלילה אם יש הרבה חיות */}
-              <ScrollView style={{ maxHeight: 150 }}>
+              <ScrollView 
+              style={styles.petListScroll}
+              nestedScrollEnabled={true}
+              >
                 {/* תנאי: אם אין חיות - מציג הודעה, אחרת מציג את הרשימה */}
                 {pets.length === 0 ? (
                   <Text style={styles.noPetsText}>No pets found</Text>
@@ -343,6 +346,10 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
     zIndex: 1000,  // שכבה גבוהה מאוד
+    maxHeight: 200,
+  },
+  petListScroll: { 
+    maxHeight: 200,
   },
   petListItem: {
     flexDirection: 'row',
