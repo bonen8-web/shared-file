@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import api from '../api/config';
 
-import ChooseDataToView from '../assets/images/Choose data to view.png';
+import ChooseDataToView from '../assets/images/choose-data-to-view.png';
 
 interface Document {
   id: number;

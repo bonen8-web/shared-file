@@ -19,7 +19,7 @@ import api from '../api/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // רקע
-import HealthPage from '../assets/images/Health Page.png';
+import HealthPage from '../assets/images/health-page.png';
 
 export default function PetProfileScreen() {
   const router = useRouter();

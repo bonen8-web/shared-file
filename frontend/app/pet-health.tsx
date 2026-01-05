@@ -20,7 +20,7 @@ import api from '../api/config';          // חיבור לשרת
 import AsyncStorage from '@react-native-async-storage/async-storage'; // אחסון מקומי
 
 // ייבוא תמונות הרקע וחלקי הפאזל
-import HealthPage from '../assets/images/Health Page.png';
+import HealthPage from '../assets/images/health-page.png';
 import PetHealth1 from '../assets/images/pethealth1.png';
 import PetHealth2 from '../assets/images/pethealth2.png';
 import PetHealth3 from '../assets/images/pethealth3.png';

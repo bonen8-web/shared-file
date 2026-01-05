@@ -17,7 +17,7 @@ import api from '../api/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ייבוא תמונת הרקע
-import ViewPetData from '../assets/images/View pet data.png';
+import ViewPetData from '../assets/images/view-pet-data.png';
 
 interface User {
   id: number;

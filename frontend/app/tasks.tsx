@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 // ייבוא תמונות
-import TaskScreen from '../assets/images/Task screen.png';
+import TaskScreen from '../assets/images/task-screen.png';
 import Task1 from '../assets/images/task1.png';
 import Task2 from '../assets/images/task2.png';
 

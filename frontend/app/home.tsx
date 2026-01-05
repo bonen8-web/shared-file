@@ -10,10 +10,10 @@ import React from 'react';
 // ==========================================
 // ייבוא תמונות
 // ==========================================
-import Homepage from '../assets/images/Homepage.png';    // תמונת הרקע
-import UserIcon from '../assets/images/User icon.png';  // אייקון משתמש (פינה שמאלית)
-import Logo from '../assets/images/Logo.png';            // הלוגו של האפליקציה
-
+import Homepage from '../assets/images/homepage.png';    // תמונת הרקע
+import UserIcon from '../assets/images/user-icon.png';  // אייקון משתמש (פינה שמאלית)
+import Logo from '../assets/images/logo.png';            // הלוגו של האפליקציה
+import plus from '../assets/images/plus.png';            // סימן פלוס של האפליקציה
 // ייבוא רכיבים מ-React Native
 import { 
   View,               // קונטיינר בסיסי
@@ -59,6 +59,16 @@ export default function HomeScreen() {
         >
           <Image source={UserIcon} style={styles.userIcon} resizeMode="contain" />
         </TouchableOpacity>
+
+        {/* ---- אייקון הוספת חיה (פינה ימנית עליונה) ---- */}
+        {/* לחיצה מעבירה לעמוד הוספת חיה */}
+        <TouchableOpacity 
+          style={styles.plusiconButton} 
+          onPress={() => router.push('/add-pet')}
+        >
+          <Image source={plus} style={styles.plusicon} resizeMode="contain" />
+        </TouchableOpacity>
+
 
         {/* ---- לוגו וכותרת ---- */}
         <View style={styles.logoContainer}>
@@ -137,6 +147,19 @@ const styles = StyleSheet.create({
     width: 65,
     height: 65,
   },
+
+    // ---- אייקון פלוס ----
+    plusiconButton: {
+      position: 'absolute',  // מיקום קבוע
+      top: 50,               // מרחק מלמעלה
+      right: 20,              // מרחק משמאל
+      zIndex: 10,            // מעל אלמנטים אחרים
+    },
+  
+    plusicon: {
+      width: 65,
+      height: 65,
+    },
 
   // ---- לוגו ממורכז ----
   logoContainer: {

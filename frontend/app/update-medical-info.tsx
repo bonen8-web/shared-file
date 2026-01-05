@@ -15,7 +15,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import api from '../api/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import UpdateDataScreen from '../assets/images/Update data screen.png';
+import UpdateDataScreen from '../assets/images/update-data-screen.png';
 
 export default function UpdateMedicalInfoScreen() {
   const router = useRouter();

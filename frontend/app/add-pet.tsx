@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -16,8 +16,8 @@ import { useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../api/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-import HealthPage from '../assets/images/Health Page.png';
+import { useFocusEffect } from 'expo-router';
+import HealthPage from '../assets/images/health-page.png';
 
 export default function AddPetScreen() {
   const router = useRouter();

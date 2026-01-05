@@ -19,7 +19,7 @@ import api from '../api/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ייבוא תמונת הרקע
-import TaskScreen from '../assets/images/Task screen.png';
+import TaskScreen from '../assets/images/task-screen.png';
 
 interface Pet {
   id: number;

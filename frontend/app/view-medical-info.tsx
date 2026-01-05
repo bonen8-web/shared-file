@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import api from '../api/config';
 
-import ViewPetData from '../assets/images/View pet data.png';
+import ViewPetData from '../assets/images/view-pet-data.png';
 
 interface MedicalInfo {
   weight?: number;

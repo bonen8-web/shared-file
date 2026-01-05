@@ -19,7 +19,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../api/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import TaskScreen from '../assets/images/Task screen.png';
+import TaskScreen from '../assets/images/task-screen.png';
 
 export default function EditTaskScreen() {
   const router = useRouter();

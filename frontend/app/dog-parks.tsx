@@ -14,7 +14,7 @@ import { useRouter } from 'expo-router';
 import api from '../api/config';
 
 // ייבוא תמונת הרקע
-import DogsPlayground from '../assets/images/Dogs Playground.png';
+import DogsPlayground from '../assets/images/dogs-playground.png';
 
 interface DogPark {
   id: number;

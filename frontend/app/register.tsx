@@ -30,7 +30,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 // ייבוא תמונות
 // ==========================================
 // תמונת הרקע של עמוד ההרשמה
-import RegisterBg from '../assets/images/Register.png';
+import RegisterBg from '../assets/images/register.png';
 
 // ==========================================
 // הקומפוננטה הראשית - מסך ההרשמה

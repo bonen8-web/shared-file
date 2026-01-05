@@ -9,7 +9,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, RelativePathString } from 'expo-router';
 import api from '../api/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -186,7 +186,7 @@ export default function ViewTasksScreen() {
                   {/* תוכן המשימה - לחיצה לעריכה */}
                   <TouchableOpacity 
                     style={styles.taskContent}
-                    onPress={() => router.push(`/edit-task?taskId=${task.id}`)}
+                    onPress={() => router.push(`/edit-task?taskId=${task.id}` as RelativePathString)}
                     activeOpacity={0.7}
                   >
                     <Text 
@@ -226,7 +226,7 @@ export default function ViewTasksScreen() {
                   
                   {/* אייקון עריכה */}
                   <TouchableOpacity 
-                    onPress={() => router.push(`/edit-task?taskId=${task.id}`)}
+                    onPress={() => router.push(`/edit-task?taskId=${task.id}` as RelativePathString)}
                     style={styles.editButton}
                   >
                     <Text style={styles.editIcon}>✏️</Text>
