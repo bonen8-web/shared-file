@@ -2,7 +2,8 @@
 // עמוד בריאות חיית המחמד - Pet Health Screen
 // =====================================
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { 
   View, 
   Text, 
@@ -42,10 +43,11 @@ export default function PetHealthScreen() {
   const [showPetList, setShowPetList] = useState(false);    // האם להציג את רשימת החיות (dropdown)
 
   // useEffect - רץ פעם אחת כשהקומפוננטה נטענת ([] = רשימת תלויות ריקה)
-  useEffect(() => {
-    loadPets(); // טוען את רשימת החיות מהשרת
-  }, []);
-
+  useFocusEffect(
+    useCallback(() => {
+      loadPets();
+    }, [])
+  );
   // ========== פונקציה לטעינת חיות המחמד מהשרת ==========
   const loadPets = async () => {
     try {
@@ -135,11 +137,11 @@ export default function PetHealthScreen() {
           {/* רשימת החיות הנפתחת - מוצגת רק כש-showPetList === true */}
           {showPetList && (
             <View style={styles.petList}>
-              {/* ScrollView מאפשר גלילה אם יש הרבה חיות */}
               <ScrollView 
-              style={styles.petListScroll}
-              nestedScrollEnabled={true}
-              >
+                 style={styles.petListScroll}
+                  nestedScrollEnabled={true}
+                  keyboardShouldPersistTaps="handled"
+                  bounces={false}>  
                 {/* תנאי: אם אין חיות - מציג הודעה, אחרת מציג את הרשימה */}
                 {pets.length === 0 ? (
                   <Text style={styles.noPetsText}>No pets found</Text>
@@ -346,10 +348,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
     zIndex: 1000,  // שכבה גבוהה מאוד
-    maxHeight: 200,
+    maxHeight: 250,
+    overflow: 'hidden',
   },
   petListScroll: { 
     maxHeight: 200,
+    flexGrow: 0,
   },
   petListItem: {
     flexDirection: 'row',

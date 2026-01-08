@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { 
   View, 
   Text, 
@@ -48,9 +49,11 @@ export default function UserProfileScreen() {
   const [joining, setJoining] = useState(false);
   const [userId, setUserId] = useState<number | null>(null);
 
-  useEffect(() => {
-    loadUserIdAndFetchData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadUserIdAndFetchData();
+    }, [])
+  );
 
   const loadUserIdAndFetchData = async () => {
     try {
@@ -138,7 +141,7 @@ export default function UserProfileScreen() {
 
   // מעבר לעמוד פרופיל חיה
   const goToPetProfile = (petId: number) => {
-    router.push(`/pet-profile?id=${petId}`);
+    router.push(`/pet-profile?id=${petId}` as any);
   };
 
   return (

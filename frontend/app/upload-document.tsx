@@ -14,8 +14,10 @@ import {
   TextInput,           // שדה קלט טקסט
   ScrollView,          // אזור גלילה
   Alert,               // התראות (מובייל)
-  Platform             // זיהוי פלטפורמה (iOS/Android/Web)
+  Platform           // זיהוי פלטפורמה (iOS/Android/Web)
+
 } from 'react-native';
+
 import { SafeAreaView } from 'react-native-safe-area-context'; // אזור בטוח מהנוטש
 import { useRouter, useLocalSearchParams } from 'expo-router'; // ניווט + קבלת פרמטרים מה-URL
 import api from '../api/config';                               // חיבור לשרת

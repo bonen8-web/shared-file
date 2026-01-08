@@ -53,12 +53,21 @@ export default function ViewDocumentsScreen() {
   // פתיחת/הורדת מסמך
   const openDocument = async (doc: Document) => {
     try {
-      const supported = await Linking.canOpenURL(doc.url);
+      let cleanUrl = doc.url;
+
+      if (cleanUrl.includes('%25')) {
+        cleanUrl = decodeURIComponent(cleanUrl);
+      }
+      if (!cleanUrl.startsWith('http')) {
+        cleanUrl = `https://orelbo2.mtacloud.co.il${cleanUrl.startsWith('/') ? '' : '/'}${cleanUrl}`;
+      }
+      console.log('Opening URL:', cleanUrl);
+      const supported = await Linking.canOpenURL(cleanUrl);
       if (supported) {
-        await Linking.openURL(doc.url);
+        await Linking.openURL(cleanUrl);
       } else {
         if (Platform.OS === 'web') {
-          window.open(doc.url, '_blank');
+          window.open(cleanUrl, '_blank');
         } else {
           Alert.alert('Error', 'Cannot open this document');
         }

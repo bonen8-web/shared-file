@@ -8,8 +8,10 @@ import {
   TextInput,
   ScrollView,
   Alert,
-  Platform
+  Platform,
+  Modal                //  פופ אפ לבחור תאריך
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import api from '../api/config';
@@ -31,6 +33,10 @@ export default function UpdateMedicalInfoScreen() {
   const [lastCheckup, setLastCheckup] = useState('');
   const [nextCheckup, setNextCheckup] = useState('');
   const [notes, setNotes] = useState('');
+  const [showLastCheckupPicker, setShowLastCheckupPicker] = useState(false);
+  const [showNextCheckupPicker, setShowNextCheckupPicker] = useState(false);
+  const [tempLastCheckup, setTempLastCheckup] = useState<Date | null>(null);
+  const [tempNextCheckup, setTempNextCheckup] = useState<Date | null>(null);
 
   useEffect(() => {
     loadUserId();
@@ -65,7 +71,58 @@ export default function UpdateMedicalInfoScreen() {
       console.error('Error fetching medical info:', error);
     }
   };
+// פורמט תאריך לתצוגה
+const formatDateDisplay = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+};
 
+// פורמט תאריך לשרת
+const formatDateForServer = (date: Date | null) => {
+  if (!date) return '';
+  return date.toISOString().split('T')[0]; // YYYY-MM-DD
+};
+
+// טיפול בבחירת תאריך Last Checkup
+const onLastCheckupChange = (event: any, selectedDate?: Date) => {
+  if (Platform.OS === 'android') {
+    setShowLastCheckupPicker(false);
+    if (event.type === 'set' && selectedDate) {
+      setLastCheckup(formatDateForServer(selectedDate));
+    }
+  } else if (selectedDate) {
+    setTempLastCheckup(selectedDate);
+  }
+};
+
+// טיפול בבחירת תאריך Next Checkup
+const onNextCheckupChange = (event: any, selectedDate?: Date) => {
+  if (Platform.OS === 'android') {
+    setShowNextCheckupPicker(false);
+    if (event.type === 'set' && selectedDate) {
+      setNextCheckup(formatDateForServer(selectedDate));
+    }
+  } else if (selectedDate) {
+    setTempNextCheckup(selectedDate);
+  }
+};
+
+// אישור תאריך (iOS) - Last Checkup
+const confirmLastCheckup = () => {
+  if (tempLastCheckup) {
+    setLastCheckup(formatDateForServer(tempLastCheckup));
+  }
+  setShowLastCheckupPicker(false);
+};
+
+// אישור תאריך (iOS) - Next Checkup
+const confirmNextCheckup = () => {
+  if (tempNextCheckup) {
+    setNextCheckup(formatDateForServer(tempNextCheckup));
+  }
+  setShowNextCheckupPicker(false);
+};
   const handleSave = async () => {
     try {
       const { data } = await api.put(`/api/pets/${petId}/medical-info`, {
@@ -196,27 +253,142 @@ export default function UpdateMedicalInfoScreen() {
             <Text style={styles.sectionTitle}>Checkup Dates</Text>
 
             <View style={styles.row}>
-              <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
-                <Text style={styles.label}>Last Checkup</Text>
-                <TextInput
-                  style={styles.input}
-                  value={lastCheckup}
-                  onChangeText={setLastCheckup}
-                  placeholder="YYYY-MM-DD"
-                />
-              </View>
+  <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
+    <Text style={styles.label}>Last Checkup</Text>
+    {Platform.OS === 'web' ? (
+      <input
+        type="date"
+        style={{
+          backgroundColor: '#f8f9fa',
+          border: '1px solid #e0e0e0',
+          borderRadius: 10,
+          padding: 12,
+          fontSize: 15,
+          width: '100%',
+        }}
+        value={lastCheckup}
+        onChange={(e) => setLastCheckup(e.target.value)}
+      />
+    ) : (
+      <TouchableOpacity 
+        style={styles.dateButton}
+        onPress={() => {
+          setTempLastCheckup(lastCheckup ? new Date(lastCheckup) : new Date());
+          setShowLastCheckupPicker(true);
+        }}
+      >
+        <Text style={styles.dateButtonText}>
+          {lastCheckup ? formatDateDisplay(lastCheckup) : 'Select date'}
+        </Text>
+        <Text style={styles.dateIcon}>📅</Text>
+      </TouchableOpacity>
+    )}
+  </View>
 
-              <View style={[styles.inputGroup, { flex: 1 }]}>
-                <Text style={styles.label}>Next Checkup</Text>
-                <TextInput
-                  style={styles.input}
-                  value={nextCheckup}
-                  onChangeText={setNextCheckup}
-                  placeholder="YYYY-MM-DD"
-                />
+  <View style={[styles.inputGroup, { flex: 1 }]}>
+    <Text style={styles.label}>Next Checkup</Text>
+    {Platform.OS === 'web' ? (
+      <input
+        type="date"
+        style={{
+          backgroundColor: '#f8f9fa',
+          border: '1px solid #e0e0e0',
+          borderRadius: 10,
+          padding: 12,
+          fontSize: 15,
+          width: '100%',
+        }}
+        value={nextCheckup}
+        onChange={(e) => setNextCheckup(e.target.value)}
+      />
+    ) : (
+      <TouchableOpacity 
+        style={styles.dateButton}
+        onPress={() => {
+          setTempNextCheckup(nextCheckup ? new Date(nextCheckup) : new Date());
+          setShowNextCheckupPicker(true);
+        }}
+      >
+        <Text style={styles.dateButtonText}>
+          {nextCheckup ? formatDateDisplay(nextCheckup) : 'Select date'}
+        </Text>
+        <Text style={styles.dateIcon}>📅</Text>
+      </TouchableOpacity>
+    )}
+  </View>
+</View>
+
+{/* Date Pickers for Android */}
+{Platform.OS === 'android' && showLastCheckupPicker && (
+  <DateTimePicker
+    value={tempLastCheckup || new Date()}
+    mode="date"
+    display="default"
+    onChange={onLastCheckupChange}
+    maximumDate={new Date()}
+  />
+)}
+
+{Platform.OS === 'android' && showNextCheckupPicker && (
+  <DateTimePicker
+    value={tempNextCheckup || new Date()}
+    mode="date"
+    display="default"
+    onChange={onNextCheckupChange}
+    minimumDate={new Date()}
+  />
+)}
+
+{/* Date Picker Modal for iOS */}
+{Platform.OS === 'ios' && showLastCheckupPicker && (
+  <Modal visible={showLastCheckupPicker} transparent animationType="slide">
+    <View style={styles.modalOverlay}>
+      <View style={styles.modalContent}>
+        <View style={styles.modalHeader}>
+          <TouchableOpacity onPress={() => setShowLastCheckupPicker(false)}>
+            <Text style={styles.modalCancel}>Cancel</Text>
+          </TouchableOpacity>
+          <Text style={styles.modalTitle}>Last Checkup</Text>
+          <TouchableOpacity onPress={confirmLastCheckup}>
+            <Text style={styles.modalDone}>Done</Text>
+          </TouchableOpacity>
+        </View>
+        <DateTimePicker
+          value={tempLastCheckup || new Date()}
+          mode="date"
+                 display="default"
+                 onChange={onLastCheckupChange}
+                 maximumDate={new Date()}
+                 />
               </View>
             </View>
+         </Modal>
+        )}
 
+          {Platform.OS === 'ios' && showNextCheckupPicker && (
+                <Modal visible={showNextCheckupPicker} transparent animationType="slide">
+                   <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            <View style={styles.modalHeader}>
+                                 <TouchableOpacity onPress={() => setShowNextCheckupPicker(false)}>
+                                   <Text style={styles.modalCancel}>Cancel</Text>
+                                </TouchableOpacity>
+                                <Text style={styles.modalTitle}>Next Checkup</Text>
+                                <TouchableOpacity onPress={confirmNextCheckup}>
+                                    <Text style={styles.modalDone}>Done</Text>
+                                </TouchableOpacity>
+                            </View>
+                          <DateTimePicker
+                         value={tempNextCheckup || new Date()}
+                         mode="date"
+                         display="default"
+                         onChange={onNextCheckupChange}
+                         minimumDate={new Date()}
+                          />
+                        </View>
+                       </View>
+                      </Modal>
+                    )}
             {/* הערות */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Additional Notes</Text>
@@ -339,6 +511,56 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  dateButton: {
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 10,
+    padding: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dateButtonText: {
+    fontSize: 15,
+    color: '#333',
+  },
+  dateIcon: {
+    fontSize: 18,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  modalCancel: {
+    fontSize: 16,
+    color: '#999',
+  },
+  modalDone: {
+    fontSize: 16,
+    color: '#6ED29A',
+    fontWeight: '600',
   },
 });
 
