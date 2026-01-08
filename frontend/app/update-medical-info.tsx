@@ -253,41 +253,41 @@ const confirmNextCheckup = () => {
             <Text style={styles.sectionTitle}>Checkup Dates</Text>
 
             <View style={styles.row}>
-  <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
-    <Text style={styles.label}>Last Checkup</Text>
-    {Platform.OS === 'web' ? (
-      <input
-        type="date"
-        style={{
-          backgroundColor: '#f8f9fa',
-          border: '1px solid #e0e0e0',
-          borderRadius: 10,
-          padding: 12,
-          fontSize: 15,
-          width: '100%',
-        }}
-        value={lastCheckup}
-        onChange={(e) => setLastCheckup(e.target.value)}
-      />
-    ) : (
-      <TouchableOpacity 
-        style={styles.dateButton}
-        onPress={() => {
-          setTempLastCheckup(lastCheckup ? new Date(lastCheckup) : new Date());
-          setShowLastCheckupPicker(true);
-        }}
-      >
-        <Text style={styles.dateButtonText}>
-          {lastCheckup ? formatDateDisplay(lastCheckup) : 'Select date'}
-        </Text>
-        <Text style={styles.dateIcon}>📅</Text>
-      </TouchableOpacity>
-    )}
-  </View>
+            <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
+             <Text style={styles.label}>Last Checkup</Text>
+              {Platform.OS === 'web' ? (
+               <input
+                type="date"
+                style={{
+                backgroundColor: '#f8f9fa',
+                border: '1px solid #e0e0e0',
+                borderRadius: 10,
+                padding: 12,
+                fontSize: 15,
+                width: '100%',
+                 }}
+                 value={lastCheckup}
+                 onChange={(e) => setLastCheckup(e.target.value)}
+                 />
+              ) : (
+             <TouchableOpacity 
+               style={styles.dateButton}
+               onPress={() => {
+                setTempLastCheckup(lastCheckup ? new Date(lastCheckup) : new Date());
+                setShowLastCheckupPicker(true);
+                }}
+                >
+                <Text style={styles.dateButtonText}>
+                 {lastCheckup ? formatDateDisplay(lastCheckup) : 'Select date'}
+                </Text>
+                 <Text style={styles.dateIcon}>📅</Text>
+                </TouchableOpacity>
+                )}
+              </View>
 
-  <View style={[styles.inputGroup, { flex: 1 }]}>
-    <Text style={styles.label}>Next Checkup</Text>
-    {Platform.OS === 'web' ? (
+             <View style={[styles.inputGroup, { flex: 1 }]}>
+              <Text style={styles.label}>Next Checkup</Text>
+                {Platform.OS === 'web' ? (
       <input
         type="date"
         style={{
