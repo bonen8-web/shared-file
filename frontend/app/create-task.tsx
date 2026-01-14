@@ -17,9 +17,11 @@ import { useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../api/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+ 
 // ייבוא תמונת הרקע
 import TaskScreen from '../assets/images/task-screen.png';
+
+let testError = "this will cause lint error"; // שורה לבדיקת pre-commit - מחק אותי!
 
 interface Pet {
   id: number;
