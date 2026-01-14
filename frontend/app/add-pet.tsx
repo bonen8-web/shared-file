@@ -1,4 +1,23 @@
+// ==========================================
+// עמוד הוספת חיית מחמד (Add Pet Screen)
+// ==========================================
+// עמוד זה מאפשר למשתמש להוסיף חיית מחמד חדשה לחשבון שלו.
+// המשתמש יכול להזין: שם, סוג חיה, גזע, מין ותאריך לידה.
+
+// ייבוא React והפונקציות לניהול מצב
 import React, { useState, useEffect, useCallback } from 'react';
+
+// ייבוא רכיבים מ-React Native:
+// - View: קונטיינר בסיסי (כמו div ב-HTML)
+// - Text: להצגת טקסט
+// - StyleSheet: ליצירת סגנונות (כמו CSS)
+// - ImageBackground: תמונת רקע
+// - TouchableOpacity: כפתור לחיץ
+// - TextInput: שדה קלט טקסט
+// - ScrollView: אזור עם גלילה
+// - Alert: חלון התראה (מובייל)
+// - Platform: לזיהוי הפלטפורמה (web/android/ios)
+// - Modal: חלון מודלי (פופ-אפ)
 import { 
   View, 
   Text, 
@@ -11,100 +30,140 @@ import {
   Platform,
   Modal
 } from 'react-native';
+
+// SafeAreaView - מונע חפיפה עם סרגלי המערכת (notch, סרגל תחתון)
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+// useRouter - הוק לניווט בין עמודים
 import { useRouter } from 'expo-router';
+
+// DateTimePicker - רכיב לבחירת תאריך (נייטיב לאנדרואיד/iOS)
 import DateTimePicker from '@react-native-community/datetimepicker';
+
+// api - מודול לשליחת בקשות HTTP לשרת
 import api from '../api/config';
+
+// AsyncStorage - אחסון מקומי (כמו localStorage בווב)
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// useFocusEffect - הוק שרץ כשהעמוד מקבל פוקוס
 import { useFocusEffect } from 'expo-router';
+
+// ייבוא תמונת הרקע
 import HealthPage from '../assets/images/health-page.png';
 
+// ==========================================
+// הקומפוננטה הראשית - מסך הוספת חיה
+// ==========================================
 export default function AddPetScreen() {
+  // הוק לניווט - מאפשר לעבור לעמודים אחרים
   const router = useRouter();
   
-  const [name, setName] = useState('');
-  const [species, setSpecies] = useState('');
-  const [customSpecies, setCustomSpecies] = useState('');
-  const [breed, setBreed] = useState('');
-  const [gender, setGender] = useState('');
-  const [birthDate, setBirthDate] = useState<Date | null>(null);
-  const [userId, setUserId] = useState<number | null>(null);
+  // ========== State - משתני מצב של הקומפוננטה ==========
+  const [name, setName] = useState('');                          // שם החיה (חובה)
+  const [species, setSpecies] = useState('');                    // סוג החיה (כלב/חתול/אחר)
+  const [customSpecies, setCustomSpecies] = useState('');        // סוג מותאם אישית (אם בחרו "Other")
+  const [breed, setBreed] = useState('');                        // גזע
+  const [gender, setGender] = useState('');                      // מין (Male/Female)
+  const [birthDate, setBirthDate] = useState<Date | null>(null); // תאריך לידה
+  const [userId, setUserId] = useState<number | null>(null);     // מזהה המשתמש
   
-  // States לבוחר תאריך
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [tempDate, setTempDate] = useState(new Date());
+  // States לבוחר תאריך (נייטיב)
+  const [showDatePicker, setShowDatePicker] = useState(false);   // האם להציג את בוחר התאריך
+  const [tempDate, setTempDate] = useState(new Date());          // תאריך זמני (לפני אישור)
 
-  // רשימת סוגי חיות
+  // רשימת סוגי החיות האפשריים לבחירה
   const speciesOptions = ['Dog', 'Cat', 'Bird', 'Fish', 'Rabbit', 'Hamster', 'Guinea Pig', 'Turtle', 'Other'];
 
+  // useEffect - רץ פעם אחת כשהקומפוננטה נטענת
   useEffect(() => {
-    loadUserId();
+    loadUserId();  // טוען את מזהה המשתמש מהאחסון המקומי
   }, []);
 
+  // ========== פונקציה לטעינת מזהה המשתמש ==========
+  // שולפת את ה-userId מהאחסון המקומי (נשמר בזמן ההתחברות)
   const loadUserId = async () => {
     const storedUserId = await AsyncStorage.getItem('userId');
     if (storedUserId) {
+      // המרה ממחרוזת למספר (parseInt בבסיס 10)
       setUserId(parseInt(storedUserId, 10));
     }
   };
 
-  // פתיחת בוחר התאריך
+  // ========== פונקציה לפתיחת בוחר התאריך ==========
   const openDatePicker = () => {
+    // אם יש תאריך קיים - משתמשים בו, אחרת היום
     setTempDate(birthDate || new Date());
     setShowDatePicker(true);
   };
 
-  // טיפול בשינוי תאריך
+  // ========== טיפול בשינוי תאריך ==========
+  // הפונקציה מטפלת שונה בין אנדרואיד ל-iOS
   const onDateChange = (event: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
+      // באנדרואיד - הבוחר נסגר אוטומטית אחרי בחירה
       setShowDatePicker(false);
       if (event.type === 'set' && selectedDate) {
-        setBirthDate(selectedDate);
+        setBirthDate(selectedDate);  // שומר ישירות
       }
     } else {
+      // ב-iOS - הבוחר נשאר פתוח, שומר בזמני
       if (selectedDate) {
         setTempDate(selectedDate);
       }
     }
   };
 
-  // אישור התאריך (iOS)
+  // ========== אישור התאריך (iOS בלבד) ==========
+  // ב-iOS צריך לחיצה על "Done" כדי לאשר את הבחירה
   const confirmDate = () => {
     setBirthDate(tempDate);
     setShowDatePicker(false);
   };
 
-  // פורמט תאריך לתצוגה
+  // ========== פורמט תאריך לתצוגה ==========
+  // ממיר Date לפורמט DD/MM/YYYY
   const formatDate = (date: Date) => {
     return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
   };
 
+  // ==========================================
+  // פונקציית הוספת חיה - מתבצעת בלחיצה על "Add Pet"
+  // ==========================================
   const handleAddPet = async () => {
+    // ---- שלב 1: ולידציה ----
+    // בודק שהמשתמש הזין שם (שדה חובה)
     if (!name.trim()) {
+      // הצגת הודעת שגיאה - שונה בין web למובייל
       if (Platform.OS === 'web') {
         alert('Please enter a pet name');
       } else {
         Alert.alert('Error', 'Please enter a pet name');
       }
-      return;
+      return;  // עוצר את הפונקציה
     }
 
+    // ---- שלב 2: הכנת הנתונים ----
     // קביעת הסוג הסופי - אם בחרו "Other", משתמשים בטקסט שהוקלד
     const finalSpecies = species === 'Other' ? customSpecies.trim() : species;
 
+    // ---- שלב 3: שליחה לשרת ----
     try {
+      // שליחת בקשת POST ל-API עם פרטי החיה
       const { data } = await api.post('/api/pets', {
         user_id: userId,
         name: name.trim(),
         species: finalSpecies || null,
         breed: breed.trim() || null,
         gender: gender || null,
+        // המרת תאריך לפורמט YYYY-MM-DD (פורמט שהשרת מצפה לו)
         birth_date: birthDate ? birthDate.toISOString().split('T')[0] : null,
       });
 
+      // ---- שלב 4: הצלחה! ----
       if (Platform.OS === 'web') {
         alert('Pet added successfully!');
-        router.back();
+        router.back();  // חזרה לעמוד הקודם
       } else {
         Alert.alert(
           'Pet Added Successfully!', 
@@ -118,7 +177,9 @@ export default function AddPetScreen() {
         );
       }
     } catch (error: any) {
+      // ---- טיפול בשגיאות ----
       console.error('Error adding pet:', error);
+      // מנסה לקחת הודעת שגיאה מהשרת, אם אין - הודעה כללית
       const message = error.response?.data?.message || 'Network error. Please try again.';
       if (Platform.OS === 'web') {
         alert('Error: ' + message);
@@ -228,6 +289,7 @@ export default function AddPetScreen() {
                     padding: 12,
                     fontSize: 16,
                     width: '100%',
+                    boxSizing: 'border-box',
                   }}
                   value={birthDate ? birthDate.toISOString().split('T')[0] : ''}
                   onChange={(e) => setBirthDate(e.target.value ? new Date(e.target.value) : null)}
@@ -290,10 +352,14 @@ export default function AddPetScreen() {
   );
 }
 
+// ==========================================
+// StyleSheet - הגדרות עיצוב הקומפוננטה
+// ==========================================
 const styles = StyleSheet.create({
+  // ---------- סגנונות בסיס ----------
   safeArea: {
-    flex: 1,
-    backgroundColor: '#D9E5EF',
+    flex: 1,                      // תופס את כל המקום הזמין
+    backgroundColor: '#D9E5EF',   // צבע רקע תואם לתמונה
   },
   background: {
     flex: 1,
