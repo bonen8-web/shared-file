@@ -580,10 +580,18 @@ def update_task(task_id):
         task.description = data['description']
 
     if 'due_date' in data:
-        try:
-            task.due_date = datetime.strptime(data['due_date'], '%Y-%m-%d')
-        except ValueError:
-            return jsonify({'status': 'error', 'message': 'Invalid date format. Use YYYY-MM-DD'}),400
+        raw_due_date = data['due_date']
+        if raw_due_date:
+            try:
+                if "T" in raw_due_date:
+                    clean_date = raw_due_date.replace('Z', '').split('.')[0]
+                    task.due_date = datetime.strptime(clean_date, '%Y-%m-%dT%H:%M:%S')
+                else:
+                    task.due_date = datetime.strptime(raw_due_date, '%Y-%m-%d')
+            except ValueError:
+                return jsonify({'status': 'error', 'message': 'Invalid date format'}), 400
+        else:
+            task.due_date = None
         
 
     if 'is_completed' in data:
