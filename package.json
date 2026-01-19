@@ -1,0 +1,13 @@
+{
+  "name": "shared-file",
+  "version": "1.0.0",
+  "description": "MyPetTime - Pet management application",
+  "private": true,
+  "scripts": {
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:backend": "cd backend && python -m flake8 . --exclude=__pycache__,venv,.venv",
+    "format:backend": "cd backend && python -m black . --check",
+    "typecheck": "cd frontend && npx tsc --noEmit"
+  }
+}
+

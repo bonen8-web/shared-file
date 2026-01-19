@@ -1,0 +1,8 @@
+# Ignore backend folder
+../backend/
+
+# Ignore dist folder (web build)
+dist/
+
+# Ignore node_modules (will be installed fresh)
+node_modules/

@@ -1,6 +1,32 @@
+# Flask and extensions
 Flask==3.0.0
 Flask-CORS==4.0.0
-gunicorn==21.2.0
+Flask-SQLAlchemy==3.1.1
+Flask-Bcrypt==1.0.1
+
+# Database
 PyMySQL==1.1.0
-python-dotenv==1.0.0
+SQLAlchemy==2.0.36
+psycopg2-binary==2.9.9
+
+# Security
 bcrypt==4.1.2
+Werkzeug==3.0.4
+
+# Production server
+gunicorn==21.2.0
+
+# Utilities
+python-dotenv==1.0.0
+requests==2.31.0
+
+# google calender sync
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+
+# Development - Code Quality
+black==24.10.0
+flake8==7.1.1
+isort==5.13.2
+pre-commit==4.0.1

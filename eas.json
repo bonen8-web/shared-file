@@ -1,0 +1,13 @@
+{
+  "cli": {
+    "version": ">= 3.0.0"
+  },
+  "build": {
+    "preview": {
+      "extends": "frontend/eas.json:preview"
+    },
+    "production": {
+      "extends": "frontend/eas.json:production"
+    }
+  }
+}
