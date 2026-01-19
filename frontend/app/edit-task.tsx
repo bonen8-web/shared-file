@@ -390,12 +390,15 @@ const styles = StyleSheet.create({
     top: 50,
     left: 20,
     zIndex: 10,
-    padding: 10,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
   backButtonText: {
     color: '#333',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   pageTitle: {
     fontSize: 32,

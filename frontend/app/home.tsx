@@ -10,9 +10,9 @@ import React from 'react';
 // ==========================================
 // ייבוא תמונות
 // ==========================================
-import Homepage from '../assets/images/homepage.png';    // תמונת הרקע
+import Homepage from '../assets/images/Homepage.png';    // תמונת הרקע
 import UserIcon from '../assets/images/user-icon.png';  // אייקון משתמש (פינה שמאלית)
-import Logo from '../assets/images/logo.png';            // הלוגו של האפליקציה
+import Logo from '../assets/images/Logo.png';            // הלוגו של האפליקציה
 import plus from '../assets/images/plus.png';            // סימן פלוס של האפליקציה
 // ייבוא רכיבים מ-React Native
 import { 
