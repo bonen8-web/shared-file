@@ -21,7 +21,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // ייבוא תמונת הרקע
 import TaskScreen from '../assets/images/task-screen.png';
 
-let testError = "this will cause lint error"; // שורה לבדיקת pre-commit 
 
 interface Pet {
   id: number;
@@ -111,12 +110,6 @@ export default function CreateTaskScreen() {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
-
-  // פורמט תאריך לשליחה לשרת
-  const formatServerDate = (date: Date | null) => {
-    if (!date) return null;
-    return date.toISOString().split('T')[0]; // YYYY-MM-DD
   };
 
   // טיפול בבחירת תאריך
@@ -242,7 +235,7 @@ export default function CreateTaskScreen() {
         assigned_user_id: assignedUserId,
         title: title.trim(),
         description: description.trim() || null,
-        due_date: dueDate ? dueDate.toISOString() : null,
+        due_date: dueDate ? dueDate.toISOString().split('T')[0] : null,
         pet_id: selectedPet,
         sync_to_calendar: syncToCalendar,
       });

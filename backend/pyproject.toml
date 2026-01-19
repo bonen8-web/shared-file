@@ -22,3 +22,5 @@ max-line-length = 120
 exclude = [".git", ".venv", "venv", "__pycache__"]
 ignore = ["E501", "W503", "E203"]
 
+
+

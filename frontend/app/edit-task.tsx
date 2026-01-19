@@ -388,17 +388,14 @@ const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
     top: 50,
-    right: 20,
+    left: 20,
     zIndex: 10,
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
+    padding: 10,
   },
   backButtonText: {
     color: '#333',
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   pageTitle: {
     fontSize: 32,

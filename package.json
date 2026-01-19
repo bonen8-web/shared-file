@@ -4,15 +4,10 @@
   "description": "MyPetTime - Pet management application",
   "private": true,
   "scripts": {
-    "prepare": "husky",
     "lint:frontend": "cd frontend && npm run lint",
     "lint:backend": "cd backend && python -m flake8 . --exclude=__pycache__,venv,.venv",
     "format:backend": "cd backend && python -m black . --check",
     "typecheck": "cd frontend && npx tsc --noEmit"
-  },
-  "devDependencies": {
-    "husky": "^9.1.7",
-    "lint-staged": "^15.2.10"
   }
 }
 
