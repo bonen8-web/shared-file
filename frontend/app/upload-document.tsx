@@ -85,7 +85,7 @@ export default function UploadDocumentScreen() {
   };
 
   // הגדרות cPanel להעלאה ישירה
-  const CPANEL_UPLOAD_URL = 'http://orelbo2.mtacloud.co.il/upload.php';
+  const CPANEL_UPLOAD_URL = 'https://orelbo2.mtacloud.co.il/upload.php';
   const CPANEL_UPLOAD_KEY = 'MyPetTime2024Secret';
 
   // ========== פונקציה לשליחת המסמך לשרת ==========

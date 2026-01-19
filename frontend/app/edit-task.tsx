@@ -134,7 +134,7 @@ export default function EditTaskScreen() {
       await api.put(`/api/tasks/${taskId}`, {
         title: title.trim(),
         description: description.trim() || null,
-        due_date: dueDate ? dueDate.toISOString().split('T')[0] : null,
+        due_date: dueDate ? `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, '0')}-${String(dueDate.getDate()).padStart(2, '0')}T${String(dueDate.getHours()).padStart(2, '0')}:${String(dueDate.getMinutes()).padStart(2, '0')}:00` : null,
         is_completed: isCompleted,
       });
 
