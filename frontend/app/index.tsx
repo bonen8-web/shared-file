@@ -31,7 +31,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 // תמונת הרקע עם העננים הצבעוניים
 import LoginBg from '../assets/images/login.png';
 // הלוגו של האפליקציה (כלב-שעון)
-import Logo from '../assets/images/logo.png';
+import Logo from '../assets/images/Logo.png';
 
 // ==========================================
 // הקומפוננטה הראשית - מסך ההתחברות
